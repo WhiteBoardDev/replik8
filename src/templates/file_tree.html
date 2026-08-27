@@ -1,0 +1,10 @@
+<div>
+    File tree
+
+    <ul>
+        {% for item in directory_list %}
+        <li>
+            <a href="{{item.download_href}}">{{ item.name }}</a></li>
+        {% endfor %}
+    </ul>
+</div>

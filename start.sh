@@ -1,0 +1,1 @@
+uv run watchfiles "python src/main.py"
