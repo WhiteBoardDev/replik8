@@ -1,3 +1,5 @@
+store.db
+.certs
 .vscode
 __pycache__
 data

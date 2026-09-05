@@ -1,35 +1,77 @@
-import page_handlers
-import page_handlers
-from typing import Callable
-import data_manager
-import template_render
+import debugpy
+from app_logging import get_logger
+import ssl
+from page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
+from urllib.parse import urlparse, parse_qs
+from page_handlers.PageHandlerAbs import ResponseFuncs, RequestAttrs, MatchType
+from page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
+from page_handlers.PageHandlerAbs import PageHandlerAbs
+from page_handlers.IndexHandler import IndexHandler
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from  page_handlers import index, download
-import routes
-
-_route_handlers: dict[str,
-Callable[[], None]] = {
-    "": index.handle,
-    routes.api_download_file_path : download.handle
-}
 
 
+_logger = get_logger('root')
+_logger.info('Starting app')
+
+
+_all_route_handlers: list[PageHandlerAbs] = [
+    IndexHandler(),
+    BitTorrentTrackerHandler()
+]
+
+not_found_handler = StatusCodeOnlyHandler(404)
+
+_exact_route_paths = { handler.get_routing_config().path: handler for handler in _all_route_handlers if handler.get_routing_config().match_type == MatchType.EXACT}
+_starting_with_route_paths = [handler for handler in _all_route_handlers if handler.get_routing_config().match_type == MatchType.STARTS_WITH]
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html")
-        self.end_headers()
-        self.wfile.write(template_render.render("index.html", {
-            "directory_list": data_manager.list_contents(None)
-        }))
+        global _exact_route_paths 
+        global _starting_with_route_paths
+
+        # Really basic handler routing, supporting `MatchType`
+        handler = _exact_route_paths.get(self._get_path_only())
+        if handler is None:
+            for possible_handler in _starting_with_route_paths:
+                if self._get_path_only().startswith(possible_handler.get_routing_config().path):
+                    handler = possible_handler
+                    break
+
+        responseFuncs = ResponseFuncs(
+            self.send_response,
+            self.send_header,
+            self.end_headers,
+            self.wfile
+        )
+
+        reqAttrs = RequestAttrs(self._get_query_params())
+        if handler is None:
+            not_found_handler.handle(reqAttrs,responseFuncs)
+        else:
+            handler.handle(reqAttrs, responseFuncs)
+
+    def _get_query_params(self):
+        parsed_url = urlparse(self.path)
+        query_parameters = parse_qs(parsed_url.query)
+        return query_parameters
+
+    def _get_path_only(self) -> str:
+        return self.path.split('?')[0]
 
 
+server_address_bind = ('localhost', 8443)
 
-
-server_address_bind = ('localhost', 8080)
 httpd = HTTPServer(server_address_bind, SimpleHTTPRequestHandler)
-print("starting httpserver")
-httpd.serve_forever()
-print("server exited")
+
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('.certs/cert.pem', '.certs/key.pem')
+
+httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+try:
+    httpd.serve_forever()
+except KeyboardInterrupt:
+    httpd.server_close()
+
+_logger.info("Shut down server")

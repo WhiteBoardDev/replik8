@@ -8,6 +8,6 @@ env = jinja2.Environment(
 )
 
 
-def render(template_name: str, template_args: any):
+def render(template_name: Path, template_args: any):
     template = env.get_template(template_name)
     return template.render(template_args).encode('utf-8')
