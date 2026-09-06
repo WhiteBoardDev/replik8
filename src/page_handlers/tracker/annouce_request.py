@@ -14,9 +14,11 @@ def _first_param_or_throw(key: str, params: dict[str, list[str]]) -> str:
     return possible[0]
     
 
-def parse(peer_key: str, query_params: dict[str, list[str]]) -> AnnounceRequest:
+def parse(peer_key: str, query_params: dict[str, list[str]], client_id: str) -> AnnounceRequest:
     return AnnounceRequest(
+        ip=_first_param_or_none('ip', query_params) or client_id,
         peer_key=peer_key,
+        user_id="TODO - lookup via peer key",
         info_hash=_first_param_or_throw('info_hash', query_params),
         peer_id=_first_param_or_throw('peer_id', query_params),
         port=_first_param_or_throw('port', query_params),
@@ -29,7 +31,9 @@ def parse(peer_key: str, query_params: dict[str, list[str]]) -> AnnounceRequest:
 
 @dataclass
 class AnnounceRequest():
+    ip: str
     peer_key: str
+    user_id: str
     info_hash: str
     peer_id: str
     port: str 

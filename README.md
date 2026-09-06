@@ -1,4 +1,4 @@
-# Koinos
+# Replik8 
 
 Open source torrent tracker. Privacy focused.
 

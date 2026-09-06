@@ -25,6 +25,7 @@ class ResponseFuncs:
 
 @dataclass
 class RequestAttrs:
+    client_ip: str
     query_params: dict[str, list[str]]
 
 class PageHandlerAbs(ABC):

@@ -51,7 +51,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile
         )
 
-        reqAttrs = RequestAttrs(self._get_query_params())
+        reqAttrs = RequestAttrs(self.client_address[0], self._get_query_params())
         if handler is None:
             not_found_handler.handle(reqAttrs,responseFuncs)
         else:
