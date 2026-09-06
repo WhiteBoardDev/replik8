@@ -1,4 +1,4 @@
-import debugpy
+import argparse
 from app_logging import get_logger
 import ssl
 from page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
@@ -13,6 +13,12 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 _logger = get_logger('root')
 _logger.info('Starting app')
 
+arg_parser = argparse.ArgumentParser(
+                    prog='torrenttracker')
+
+arg_parser.add_argument("--disable_https", default=False)
+arg_parser.add_argument("--server_port", default=8080)
+args = arg_parser.parse_args()
 
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
@@ -59,15 +65,16 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def _get_path_only(self) -> str:
         return self.path.split('?')[0]
 
-
-server_address_bind = ('localhost', 8443)
-
+server_address_bind = ('localhost', args.server_port)
 httpd = HTTPServer(server_address_bind, SimpleHTTPRequestHandler)
 
-context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-context.load_cert_chain('.certs/cert.pem', '.certs/key.pem')
-
-httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+if not args.disable_https:
+    _logger.info("Running with HTTPS")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain('.certs/cert.pem', '.certs/key.pem')
+    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+else:
+    _logger.info("Running on HTTP plaintext")
 
 try:
     httpd.serve_forever()
