@@ -1,3 +1,3 @@
 
 uvx ty check
-uv run pytest
+PYTHONPATH=src/ uv run pytest
