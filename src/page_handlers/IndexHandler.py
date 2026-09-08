@@ -1,6 +1,3 @@
-from pathlib import Path
-
-import data_manager
 import template_render
 from page_handlers.PageHandlerAbs import ResponseFuncs, RequestAttrs, RoutingConfig, MatchType
 from page_handlers.PageHandlerAbs import PageHandlerAbs
@@ -14,7 +11,8 @@ class IndexHandler(PageHandlerAbs):
         res.send_response(200)
         res.send_header("Content-Type", "text/html")
         res.end_headers()
-        res.wfile.write(template_render.render("index.html", {
-            "directory_list": data_manager.list_contents(None)
-        }))
+        # TODO write nice homepage and render it
+        # res.wfile.write(template_render.render("index.html", {
+        #     "directory_list": data_manager.list_contents(None)
+        # }))
 

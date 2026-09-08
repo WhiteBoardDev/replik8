@@ -16,7 +16,7 @@ class Bencoder():
         self.message.write(f"i{base10}e")
         return self
 
-    def withDict(self, items: dict[str, str | int | dict]) -> Self:
+    def withDict(self, items: dict[str, str | int | dict | list]) -> Self:
         self.message.write('d')
         for key in sorted(items.keys()):
             self.withString(key)
