@@ -27,6 +27,9 @@ class ResponseFuncs:
 class RequestAttrs:
     client_ip: str
     query_params: dict[str, list[str]]
+    content_type: str | None
+    rfile: BufferedIOBase
+
 
 class PageHandlerAbs(ABC):
 
@@ -34,7 +37,7 @@ class PageHandlerAbs(ABC):
     def get_routing_config(self) -> RoutingConfig:
         pass
 
-
-    @abstractmethod
-    def handle(self, req: RequestAttrs, res: ResponseFuncs) -> None:
-        pass
+    def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        raise NotImplementedError()
+    def handle_post(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        raise NotImplementedError()

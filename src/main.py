@@ -1,12 +1,14 @@
+from src.users import root_user_check
+from src.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
+from src.page_handlers.IndexHandler import IndexHandler
+from src.page_handlers.PageHandlerAbs import PageHandlerAbs, ResponseFuncs, RequestAttrs, MatchType
+from src.page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
+from src.app_logging import get_logger
+from src.page_handlers import authentication_middleware
+from src.page_handlers.AddTorrentHandler import AddTorrentHandler
 import argparse
-from app_logging import get_logger
 import ssl
-from page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
 from urllib.parse import urlparse, parse_qs
-from page_handlers.PageHandlerAbs import ResponseFuncs, RequestAttrs, MatchType
-from page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
-from page_handlers.PageHandlerAbs import PageHandlerAbs
-from page_handlers.IndexHandler import IndexHandler
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 
@@ -20,19 +22,44 @@ arg_parser.add_argument("--disable_https", default=False)
 arg_parser.add_argument("--server_port", default=8080)
 args = arg_parser.parse_args()
 
+_tracker_handler = BitTorrentTrackerHandler()
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
-    BitTorrentTrackerHandler()
+    AddTorrentHandler(),
+    _tracker_handler
 ]
 
 not_found_handler = StatusCodeOnlyHandler(404)
 
-_exact_route_paths = { handler.get_routing_config().path: handler for handler in _all_route_handlers if handler.get_routing_config().match_type == MatchType.EXACT}
-_starting_with_route_paths = [handler for handler in _all_route_handlers if handler.get_routing_config().match_type == MatchType.STARTS_WITH]
+_exact_route_paths = { handler.get_routing_config().path: handler for handler in _all_route_handlers if handler.get_routing_config().match_type.name == MatchType.EXACT.name}
+_starting_with_route_paths = [handler for handler in _all_route_handlers if handler.get_routing_config().match_type.name == MatchType.STARTS_WITH.name]
+
+_unauthenticated_routes = set([_tracker_handler.get_routing_config().path])
+
+root_user_check()
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
+        self._do_verb("GET")
+
+    def do_POST(self):
+        self._do_verb("POST")
+
+    def _do_verb(self, verb: str):
+        responseFuncs = ResponseFuncs(
+            self.send_response,
+            self.send_header,
+            self.end_headers,
+            self.wfile
+        )
+
+        # Run all middleware
+        if self._get_path_only() not in _unauthenticated_routes:
+            authentication_middleware.handle(self.headers.get('Authorization'), responseFuncs)
+
+
+        # Then handle the request 
         global _exact_route_paths 
         global _starting_with_route_paths
 
@@ -44,18 +71,21 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                     handler = possible_handler
                     break
 
-        responseFuncs = ResponseFuncs(
-            self.send_response,
-            self.send_header,
-            self.end_headers,
-            self.wfile
-        )
 
-        reqAttrs = RequestAttrs(self.client_address[0], self._get_query_params())
+        reqAttrs = RequestAttrs(
+            self.client_address[0],
+            self._get_query_params(),
+            self.headers.get('Content-Type'),
+            self.rfile)
         if handler is None:
-            not_found_handler.handle(reqAttrs,responseFuncs)
+            not_found_handler.handle_get(reqAttrs,responseFuncs)
         else:
-            handler.handle(reqAttrs, responseFuncs)
+            if verb == "GET":
+                handler.handle_get(reqAttrs, responseFuncs)
+            elif verb == "POST":
+                handler.handle_post(reqAttrs, responseFuncs)
+            else:
+                not_found_handler.handle_get(reqAttrs,responseFuncs)
 
     def _get_query_params(self):
         parsed_url = urlparse(self.path)

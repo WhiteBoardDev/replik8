@@ -14,8 +14,9 @@ dependencies = [
 dev = [
     "debugpy>=1.8.21",
     "pytest>=9.1.1",
+    "ty>=0.0.80",
     "watchfiles>=1.2.0",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = ["./src"]

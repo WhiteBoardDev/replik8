@@ -1,3 +1,3 @@
 
-uvx ty check
+uv run ty check
 uv run pytest

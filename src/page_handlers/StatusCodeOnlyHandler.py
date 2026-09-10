@@ -1,6 +1,6 @@
+from src.page_handlers.PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs
+from typing import override
 
-from page_handlers.PageHandlerAbs import ResponseFuncs, RequestAttrs
-from page_handlers.PageHandlerAbs import PageHandlerAbs
 
 class StatusCodeOnlyHandler(PageHandlerAbs):
 
@@ -10,7 +10,8 @@ class StatusCodeOnlyHandler(PageHandlerAbs):
     def get_routing_config(self):
         raise NotImplementedError()
 
-    def handle(self, req: RequestAttrs, res: ResponseFuncs):
+    @override
+    def handle_get(self, req: RequestAttrs, res: ResponseFuncs):
         res.send_response(self.status)
         res.end_headers()
         
