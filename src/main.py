@@ -1,3 +1,4 @@
+from src.page_handlers.AssetsHandler import AssetsHandler
 from src.users import root_user_check
 from src.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
 from src.page_handlers.IndexHandler import IndexHandler
@@ -26,6 +27,7 @@ _tracker_handler = BitTorrentTrackerHandler()
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
     AddTorrentHandler(),
+    AssetsHandler(),
     _tracker_handler
 ]
 
@@ -73,10 +75,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
         reqAttrs = RequestAttrs(
-            self.client_address[0],
-            self._get_query_params(),
-            self.headers.get('Content-Type'),
-            self.rfile)
+            client_ip=self.client_address[0],
+            query_params=self._get_query_params(),
+            content_type=self.headers.get('Content-Type'),
+            rfile=self.rfile,
+            full_path=self._get_path_only())
         if handler is None:
             not_found_handler.handle_get(reqAttrs,responseFuncs)
         else:

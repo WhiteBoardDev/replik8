@@ -53,10 +53,31 @@ class AddTorrentHandler(PageHandlerAbs):
 
     @override
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs):
+        """
+        Handles a user uploading a .torrent file by:
+        1. Parse the form-data POST from the browser and find the torrent file bytes
+        2. Parse the bencoded torrent file into a readable dict of parts
+        3. Use the contents of the "info" key in the torrent file to compute
+        the total size of the torrent
+        4. Parse the raw bencoded value for the "info" key. Perform a sha-1 on it.
+        This sha-1 is called the "info_hash" and is the primary ID for the torrent
+        5. Store the following information into the database
+
+
+        Table: "torrent_registry"
+        - "info_hash" - (bytes) - the primary key
+        - "size" - (int) - size in bytes of the contents of the torrent
+        - "name" - The user needs to specify a name for the torrent. This comes in
+        from the form request and not from the file itself
+        - "owner_user_id" - (str) - the user_id of who uploaded it. Stub this out for now to fake it.
+        - "inserted_timestamp - (int) - unix epoch timestamp now() 
+
+
+        After all that, the handler returns an HTML success page
+        """
+
         assert req.content_type is not None and req.content_type.startswith(_content_type_prefix) == True
-        # TODO properly parse a form-data encoded request
         form_data = _parse_form_request(req.rfile)
-        print('done?')
         # TODO parse torrent file and extra specific data
 
         # TODO save torrent into registry

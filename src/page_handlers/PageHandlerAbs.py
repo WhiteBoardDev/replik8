@@ -29,6 +29,7 @@ class RequestAttrs:
     query_params: dict[str, list[str]]
     content_type: str | None
     rfile: BufferedIOBase
+    full_path: str
 
 
 class PageHandlerAbs(ABC):

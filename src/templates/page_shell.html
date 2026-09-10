@@ -4,18 +4,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{site_name}}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-       
-        referrerpolicy="no-referrer">
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.10/dist/htmx.min.js" 
-          referrerpolicy="no-referrer"></script>    
+    <title>{{page_shell.site_name}}</title>
+    {% for link in page_shell.link_includes %}
+    <link href="{{link.src}}" rel="stylesheet" integrity="{{link.integrity}}"/>
+    {% endfor %}
+    {% for js_script in page_shell.script_includes %}
+    <script src="{{js_script.src}}" integrity="{{js_script.integrity}}"></script>    
+    {% endfor %}
 </head>
 
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">{{site_name}}</a>
+    <a class="navbar-brand" href="#">{{page_shell.site_name}}</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -36,7 +37,7 @@
   </div>
 </nav>
 
-    {% include '%s' % view %}
+    {% include '%s' % page_shell.view %}
 </body>
 
 </html>
