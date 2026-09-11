@@ -52,3 +52,5 @@ js_assets = [
 
 all_known_asset_paths = set([ x.local_destination() for x in _generated_assets])
 
+def main():
+    print("assets synced")
