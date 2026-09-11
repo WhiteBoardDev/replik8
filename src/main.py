@@ -1,3 +1,5 @@
+from page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
+from page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
 from src.page_handlers.AssetsHandler import AssetsHandler
 from src.users import root_user_check
 from src.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
@@ -28,6 +30,8 @@ _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
     AddTorrentHandler(),
     AssetsHandler(),
+    RegistryTreeItemCollapsed(),
+    RegistryTreeItemExpanded(),
     _tracker_handler
 ]
 

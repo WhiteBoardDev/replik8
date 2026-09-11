@@ -1,0 +1,29 @@
+<style>
+    li.closed-list-item::marker {
+        content: "\1F4C1";
+        font-size: 1.2rem;
+        color: #ff5733;
+    }
+
+     li.expanded-list-item::marker {
+        content: "\1F4C2";
+        font-size: 1.2rem;
+        color: #ff5733;
+    }
+
+     li.list-item-file::marker {
+        content: "\1F4C3";
+        font-size: 1.2rem;
+        color: #ff5733;
+    }
+
+</style>
+
+<div id="registry-navigation-tree">
+    Registry tree Root
+    <ul>
+        {% for registry_tree_item in registry_tree['child_paths'] %}
+        {% include 'registry_tree_item_collapsed.html.jinja' %}
+        {% endfor %}
+    </ul>
+</div>

@@ -1,0 +1,7 @@
+<li id="{{registry_tree_item.html_safe_path}}" class="closed-list-item">
+    <p style="cursor: pointer;"
+    hx-target="#{{registry_tree_item.html_safe_path}}"
+    hx-swap="outerHTML"
+    hx-get="/registry-tree-item-expanded?path={{registry_tree_item.full_path}}">
+    {{registry_tree_item.leaf_path}}</p>
+</li>

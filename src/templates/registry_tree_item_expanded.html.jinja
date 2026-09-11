@@ -1,0 +1,20 @@
+<li id="{{registry_tree_item.navigation_path.html_safe_path}}" class="expanded-list-item">
+    <p hx-target="#{{registry_tree_item.navigation_path.html_safe_path}}"
+        hx-swap="outerHTML"
+        hx-get="/registry-tree-item-collapsed?path={{registry_tree_item.navigation_path.full_path}}">
+       <strong>{{registry_tree_item.navigation_path.leaf_path}}</strong>
+
+    </p>
+    <hr>
+        <ul style="list-style: none;">
+            {% for registry_tree_item in registry_tree_item.child_paths %}
+            {% include 'registry_tree_item_collapsed.html.jinja' %}
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for registry_item in registry_tree_item.registry_items %}
+            <li class="list-item-file">Torrent: {{registry_item.name}}</li>
+            {% endfor %}
+        </ul>
+    <hr>
+</li>
