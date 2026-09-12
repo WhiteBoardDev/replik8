@@ -1,7 +1,10 @@
+
+
 from src.page_handlers.AssetsHandler import AssetsHandler
 from src.users import root_user_check
 from src.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
 from src.page_handlers.IndexHandler import IndexHandler
+from src.page_handlers.ListHandler import ListHandler
 from src.page_handlers.PageHandlerAbs import PageHandlerAbs, ResponseFuncs, RequestAttrs, MatchType
 from src.page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
 from src.app_logging import get_logger
@@ -26,6 +29,7 @@ args = arg_parser.parse_args()
 _tracker_handler = BitTorrentTrackerHandler()
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
+    ListHandler(),
     AddTorrentHandler(),
     AssetsHandler(),
     _tracker_handler
