@@ -1,3 +1,34 @@
 <div class="card">
-    HELLO WORLD
+    <div class="card-body">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                {% for nav_path in registry_item_detail.path_location %}
+                <li class="breadcrumb-item active" aria-current="page">{{nav_path}}</li>
+                {% endfor %}
+            </ol>
+        </nav>
+        <div class="alert alert-primary" role="alert">
+            <h2>{{registry_item_detail.name}}</h2>
+        </div>
+        <div class="content">
+            <div class="row">
+                <div class="col">
+                    <ul style="list-style-type: none;">
+                    <li><span class="badge bg-secondary">Owner: {{registry_item_detail.owner_user_id}}</span></li>
+                    <li><span class="badge bg-success">10 Seeders</span></li>
+                    <li><span class="badge bg-danger">3 Stalled Leechers</span></li>
+                    <li><span class="badge bg-warning">3 Leechers</span></li>
+                    </ul>
+                </div>
+                <div class="col d-flex align-items-center">
+                    <button type="button" class="btn btn-success">Download</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <p>{{registry_item_detail.description}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

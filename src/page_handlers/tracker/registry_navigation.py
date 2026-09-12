@@ -100,7 +100,7 @@ class NavigationElementWithRegistryItems():
         return {
             'navigation_path': self.navigation_path.as_dict(),
             'child_paths': [x.as_dict() for x in self.child_paths],
-            'registry_items': [x.as_dict() for x in self.registry_items]
+            'registry_items': [{**x.as_dict(), "info_hash_hex" : x.info_hash.hex()}for x in self.registry_items]
         }
 
 
