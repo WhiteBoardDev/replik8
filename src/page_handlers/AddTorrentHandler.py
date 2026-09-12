@@ -1,3 +1,4 @@
+import template_render
 from dataclasses import dataclass
 import dataclasses
 from io import BufferedIOBase
@@ -50,6 +51,13 @@ class AddTorrentHandler(PageHandlerAbs):
     def get_routing_config(self):
         return RoutingConfig("/add-torrent", match_type=MatchType.EXACT)
 
+    @override
+    def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        res.send_response(200)
+        res.send_header("Content-Type", "text/html")
+        res.end_headers()
+        res.wfile.write(template_render.render("add_torrent.html.jinja", {
+        }))
 
     @override
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs):
