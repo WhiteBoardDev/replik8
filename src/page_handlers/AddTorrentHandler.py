@@ -79,9 +79,7 @@ class AddTorrentHandler(PageHandlerAbs):
         assert req.content_type is not None and req.content_type.startswith(_content_type_prefix) == True
         form_data = _parse_form_request(req.rfile)
         # TODO parse torrent file and extra specific data
-        print(form_data)
-
-        content = b'go away'
+        content = b'go away. im not ready yet'
         res.send_response(200)
         res.send_header("Content-Type", "text/html")
         res.send_header("Content-Length", str(len(content)))

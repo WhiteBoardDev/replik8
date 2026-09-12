@@ -3,7 +3,6 @@ import template_render
 from typing import override
 from page_handlers.PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
 
-
 class RegistryItemDetailHandler(PageHandlerAbs):
 
     @override
