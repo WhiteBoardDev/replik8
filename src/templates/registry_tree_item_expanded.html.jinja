@@ -1,5 +1,6 @@
 <li id="{{registry_tree_item.navigation_path.html_safe_path}}" class="expanded-list-item">
-    <p hx-target="#{{registry_tree_item.navigation_path.html_safe_path}}"
+    <p style="cursor:pointer;""
+    hx-target="#{{registry_tree_item.navigation_path.html_safe_path}}"
         hx-swap="outerHTML"
         hx-get="/registry-tree-item-collapsed?path={{registry_tree_item.navigation_path.full_path}}">
        <strong>{{registry_tree_item.navigation_path.leaf_path}}</strong>
@@ -13,7 +14,8 @@
         </ul>
         <ul>
             {% for registry_item in registry_tree_item.registry_items %}
-            <li class="list-item-file">Torrent: {{registry_item.name}}</li>
+            <li class="list-item-file" 
+            hx-get="/registry-item-detail?info_hash={{registry_item.info_hash}}" hx-target="#right-col">Torrent: {{registry_item.name}}</li>
             {% endfor %}
         </ul>
     <hr>

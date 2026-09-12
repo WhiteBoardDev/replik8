@@ -1,6 +1,5 @@
 import dataclasses
 import app_logging
-from typing import Set
 from sqlite_utils.db import Table
 from datastore.connection import get_db
 from dataclasses import dataclass

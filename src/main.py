@@ -1,3 +1,4 @@
+from page_handlers.RegistryItemDetailHander import RegistryItemDetailHandler
 from page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
 from page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
 from src.page_handlers.AssetsHandler import AssetsHandler
@@ -32,6 +33,7 @@ _all_route_handlers: list[PageHandlerAbs] = [
     AssetsHandler(),
     RegistryTreeItemCollapsed(),
     RegistryTreeItemExpanded(),
+    RegistryItemDetailHandler(),
     _tracker_handler
 ]
 
