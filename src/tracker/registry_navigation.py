@@ -1,11 +1,9 @@
-import glob
-import dataclasses
-from page_handlers.tracker.torrent_registry import RegistryItem, get_by_path
+from tracker.torrent_registry import RegistryItem, get_by_path
 from dataclasses import dataclass
-from datastore.connection import get_db
+from tracker.datastore.connection import get_db
 from typing import Set
 from sqlite_utils.db import Table
-import app_logging
+import shared_utils.app_logging as app_logging
 
 _logger = app_logging.get_logger("torrent_registry")
 

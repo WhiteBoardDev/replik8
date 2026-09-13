@@ -1,5 +1,5 @@
-from src.page_handlers.tracker.annouce_request import AnnounceRequest
-from src.datastore.connection import get_db
+from tracker.annouce_request import AnnounceRequest
+from tracker.datastore.connection import get_db
 from dataclasses import dataclass
 import dataclasses
 from sqlite_utils.db import Table

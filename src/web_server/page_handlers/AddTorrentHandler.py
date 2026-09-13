@@ -1,6 +1,5 @@
-import template_render
+import web_server.templates.template_render as template_render
 from dataclasses import dataclass
-import dataclasses
 from io import BufferedIOBase
 from typing import override
 from .PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, RequestAttrs, ResponseFuncs

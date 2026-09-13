@@ -1,4 +1,4 @@
-from src.page_handlers.PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs
+from .PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs
 from typing import override
 
 

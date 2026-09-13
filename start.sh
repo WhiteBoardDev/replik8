@@ -1,1 +1,1 @@
-uv run watchfiles "python -m debugpy --listen 0.0.0.0:5678 src/main.py --disable_https True" src
+uv run watchfiles "uv run web_server --disable_https True" src

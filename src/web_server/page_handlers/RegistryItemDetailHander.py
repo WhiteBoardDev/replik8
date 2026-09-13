@@ -1,7 +1,7 @@
-from page_handlers.tracker.torrent_registry import get_by_info_hash
-import template_render
+from tracker.torrent_registry import get_by_info_hash
+import web_server.templates.template_render as template_render
 from typing import override
-from page_handlers.PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
+from .PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
 
 class RegistryItemDetailHandler(PageHandlerAbs):
 

@@ -1,8 +1,8 @@
 from pathlib import Path
-from page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
+from .StatusCodeOnlyHandler import StatusCodeOnlyHandler
 from web_assets import all_known_asset_paths
-from page_handlers.PageHandlerAbs import PageHandlerAbs
-from src.page_handlers.PageHandlerAbs import RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
+from web_server.page_handlers.PageHandlerAbs import PageHandlerAbs
+from web_server.page_handlers.PageHandlerAbs import RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
 
 _not_found = StatusCodeOnlyHandler(404)
 

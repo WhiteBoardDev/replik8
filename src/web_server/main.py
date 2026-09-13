@@ -1,19 +1,23 @@
-from page_handlers.RegistryItemDetailHander import RegistryItemDetailHandler
-from page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
-from page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
-from src.page_handlers.AssetsHandler import AssetsHandler
-from src.users import root_user_check
-from src.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
-from src.page_handlers.IndexHandler import IndexHandler
-from src.page_handlers.PageHandlerAbs import PageHandlerAbs, ResponseFuncs, RequestAttrs, MatchType
-from src.page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
-from src.app_logging import get_logger
-from src.page_handlers import authentication_middleware
-from src.page_handlers.AddTorrentHandler import AddTorrentHandler
+from .page_handlers.RegistryItemDetailHander import RegistryItemDetailHandler
+from .page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
+from .page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
+from .page_handlers.AssetsHandler import AssetsHandler
+from tracker.users import root_user_check
+from .page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
+from .page_handlers.IndexHandler import IndexHandler
+from .page_handlers.PageHandlerAbs import PageHandlerAbs, ResponseFuncs, RequestAttrs, MatchType
+from .page_handlers.BitTorrentTrackerHandler import BitTorrentTrackerHandler
+from shared_utils.app_logging import get_logger
+from .page_handlers import authentication_middleware
+from .page_handlers.AddTorrentHandler import AddTorrentHandler
 import argparse
 import ssl
 from urllib.parse import urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import debugpy
+
+debugpy.listen(('0.0.0.0', 5678))
+
 
 
 _logger = get_logger('root')

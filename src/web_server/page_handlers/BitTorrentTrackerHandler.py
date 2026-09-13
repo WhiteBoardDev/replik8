@@ -1,9 +1,9 @@
-from src.page_handlers.tracker.annouce_response import response_to_annouce
-from src.page_handlers.PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, ResponseFuncs, RequestAttrs
-from src.app_logging import get_logger
+from tracker.annouce_response import response_to_annouce
+from .PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, ResponseFuncs, RequestAttrs
+from shared_utils.app_logging import get_logger
 from typing import override
 import dataclasses
-from .tracker import annouce_request
+from tracker import annouce_request
 
 
 _logger = get_logger("BitTorrentTrackerHandler")

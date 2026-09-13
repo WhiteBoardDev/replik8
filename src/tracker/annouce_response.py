@@ -1,6 +1,6 @@
-from src.page_handlers.tracker.annouce_request import AnnounceRequest
-from src.page_handlers.tracker.peers import upsert_peer, get_peers
-from src.page_handlers.tracker.bencoder import Bencoder
+from tracker.annouce_request import AnnounceRequest
+from tracker.peers import upsert_peer, get_peers
+from tracker.bencoder import Bencoder
 import dataclasses
 from dataclasses import dataclass
 

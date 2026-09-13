@@ -1,7 +1,7 @@
 import dataclasses
-import app_logging
+from shared_utils import app_logging
 from sqlite_utils.db import Table
-from datastore.connection import get_db
+from tracker.datastore.connection import get_db
 from dataclasses import dataclass
 
 _logger = app_logging.get_logger("torrent_registry")

@@ -1,7 +1,7 @@
-from page_handlers.tracker.registry_navigation import get_navigation_at_path
-import template_render
+from tracker.registry_navigation import get_navigation_at_path
+import web_server.templates.template_render as template_render
 from typing import override
-from page_handlers.PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
+from .PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType
 
 
 class RegistryTreeItemExpanded(PageHandlerAbs):

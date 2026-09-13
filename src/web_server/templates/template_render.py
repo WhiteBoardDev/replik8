@@ -2,7 +2,7 @@ import jinja2
 import jinja2
 
 env = jinja2.Environment(
-    loader=jinja2.PackageLoader("templates", '.'),
+    loader=jinja2.PackageLoader("web_server.templates", '.'),
     
     auto_reload=True
 )

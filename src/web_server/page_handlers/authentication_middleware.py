@@ -1,4 +1,4 @@
-from src.users import authenticate_user
+from tracker.users import authenticate_user
 from .PageHandlerAbs import ResponseFuncs
 import base64
 
