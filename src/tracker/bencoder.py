@@ -47,3 +47,7 @@ class Bencoder():
 
     def asBytes(self) -> bytes:
         return self.message.getvalue().encode('utf-8')
+
+
+def parse_bencoded_message(input: str) -> dict:
+    return dict() 
