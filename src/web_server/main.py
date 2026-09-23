@@ -70,7 +70,10 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
         # Run all middleware
         if self._get_path_only() not in _unauthenticated_routes:
-            authentication_middleware.handle(self.headers.get('Authorization'), responseFuncs)
+            authentication_middleware.handle(
+                authentication_header=self.headers.get('Authorization'), 
+                cookie_header=self.headers.get('Cookie'),
+                res=responseFuncs)
 
 
         # Then handle the request 
