@@ -1,4 +1,4 @@
-from tracker.torrent_registry import get_by_info_hash
+from tracker.registry.registry_data_access import get_by_info_hash
 import web_server.templates.template_render as template_render
 from typing import override
 from .PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType

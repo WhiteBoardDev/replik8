@@ -1,4 +1,4 @@
-from tracker.registry_navigation import get_navigation_at_path
+from tracker.registry.registry_navigation import get_navigation_at_path
 from web_assets import css_assets, js_assets
 from web_server.templates import template_render
 from web_server.page_handlers.PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, RequestAttrs, ResponseFuncs

@@ -1,9 +1,10 @@
-from tracker.torrent_registry import RegistryItem, get_by_path
+from .registry_data_access import get_by_path
 from dataclasses import dataclass
 from tracker.datastore.connection import get_db
 from typing import Set
 from sqlite_utils.db import Table
 import shared_utils.app_logging as app_logging
+from .RegistryItem import RegistryItem
 
 _logger = app_logging.get_logger("torrent_registry")
 

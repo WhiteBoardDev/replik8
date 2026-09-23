@@ -16,11 +16,13 @@ from urllib.parse import urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import debugpy
 
-debugpy.listen(('0.0.0.0', 5678))
-
-
-
 _logger = get_logger('root')
+try:
+    debugpy.listen(('0.0.0.0', 5678))
+except Exception:
+    _logger.warning('debugpy port already in use!')
+
+
 _logger.info('Starting app')
 
 arg_parser = argparse.ArgumentParser(

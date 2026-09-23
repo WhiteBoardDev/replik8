@@ -1,7 +1,10 @@
+from tracker.TorrentFile import TorrentFile
+from tracker.registry.torrent_registry import add_new_item
+from tracker.bencoder import parse_bencoded_message
 import web_server.templates.template_render as template_render
 from dataclasses import dataclass
 from io import BufferedIOBase
-from typing import override
+from typing import override, NamedTuple
 from .PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, RequestAttrs, ResponseFuncs
 
 
@@ -13,7 +16,12 @@ class BoundaryData:
     file_content: bytes
     headers: dict[str, str]
 
-def _handle_boundary(boundary: bytes, rfile: BufferedIOBase) -> BoundaryData:
+
+class ParsedBoundary(NamedTuple):
+    boundary_data: BoundaryData
+    next_boundary: bytes | None
+
+def _handle_boundary(boundary: bytes, rfile: BufferedIOBase) -> ParsedBoundary:
     collecting_headers = True
     headers = dict()
     file_content = bytearray() 
@@ -29,20 +37,34 @@ def _handle_boundary(boundary: bytes, rfile: BufferedIOBase) -> BoundaryData:
                 header_value = str_line[kv+1:]
                 headers[header_key] = header_value
         else:
-            if b'--' + boundary + b'--\r\n' == line:
-                return BoundaryData(bytes(file_content), headers)
+            if line.startswith(boundary):
+                next_boundary = line.strip()
+                if next_boundary.endswith(b'--'):
+                    next_boundary = None
+                return ParsedBoundary(BoundaryData(bytes(file_content), headers), next_boundary)
             else:
                 file_content.extend(line)
+                if len(file_content) >= _max_file_size:
+                    raise Exception("Max file size exceeded")
     raise Exception("malformed boundary data")
 
 
-def _parse_form_request(rfile: BufferedIOBase) -> BoundaryData:
-        for line in rfile:
-            if line.startswith(b'--'):
-                boundary = line[2:].strip()
-                return _handle_boundary(boundary, rfile)
-        raise Exception("improper formatted upload")
+def _parse_form_request(rfile: BufferedIOBase) -> list[BoundaryData]:
+        results = []
+        current_boundary = rfile.__next__().strip()
+        while current_boundary is not None:
+            parsed = _handle_boundary(current_boundary, rfile)
+            results.append(parsed.boundary_data)
+            current_boundary = parsed.next_boundary
 
+        return results
+
+_content_disposition = "Content-Disposition"
+def _find_boundary_with_form_input(field_name: str, boundaries: list[BoundaryData]) -> BoundaryData | None:
+    for boundary in boundaries:
+        if _content_disposition in boundary.headers and f"form-data; name=\"{field_name}\"" in boundary.headers[_content_disposition]:
+            return boundary
+    return None
 
 class AddTorrentHandler(PageHandlerAbs):
 
@@ -85,7 +107,32 @@ class AddTorrentHandler(PageHandlerAbs):
 
         assert req.content_type is not None and req.content_type.startswith(_content_type_prefix) == True
         form_data = _parse_form_request(req.rfile)
-        # TODO parse torrent file and extra specific data
+
+        boundary_with_file = _find_boundary_with_form_input("file", form_data)
+        assert boundary_with_file is not None
+
+
+        content_disposition_parts = boundary_with_file.headers['Content-Disposition'].split(';')
+        filename = [x.split('=')[-1] for x in content_disposition_parts if 'filename' in x][0].strip().replace("\"","")
+
+        assert filename.endswith('.torrent')
+        torrent_dict = parse_bencoded_message(boundary_with_file.file_content)
+
+
+        boundary_with_registry_path = _find_boundary_with_form_input("registry_path", form_data)
+        assert boundary_with_registry_path is not None
+
+        torrent_file = TorrentFile(
+            file_name=boundary_with_file.headers[_content_disposition].split('=')[-1].strip().replace('"', ''),
+            file_contents=boundary_with_file.file_content
+        )
+        add_new_item(
+            torrent_file=torrent_file, 
+            user_id='TODO',
+            description="TODO",
+            path=boundary_with_registry_path.file_content.strip().decode()
+            )
+
         content = b'go away. im not ready yet'
         res.send_response(200)
         res.send_header("Content-Type", "text/html")

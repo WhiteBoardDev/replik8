@@ -1,8 +1,13 @@
 <div class="card">
     <div class="card-content">
         <form hx-encoding='multipart/form-data' hx-post='/add-torrent'>
-            <input type="file" name="file">
-            <button>Upload</button>
+            <div class="form-group">
+                <label for="torrent-file">Choose file to upload</label>
+                <input class="form-control" id="torrent-file" type="file" name="file"></input>
+                <label for="registry-path">Path to place in registry</label>
+                <input class="form-control" value="/unsorted" id="registry-path" type="text" name="registry_path"></input>
+                <button>Upload</button>
+            </div>
         </form>
     </div>
 </div>

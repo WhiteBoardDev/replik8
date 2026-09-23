@@ -1,4 +1,4 @@
-from tracker.registry_navigation import get_navigation_at_path
+from tracker.registry.registry_navigation import get_navigation_at_path
 import web_server.templates.template_render as template_render
 from typing import override
 from .PageHandlerAbs import PageHandlerAbs, RequestAttrs, ResponseFuncs, RoutingConfig, MatchType

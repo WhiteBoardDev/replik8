@@ -7,7 +7,7 @@ def test_decimal_and_dict():
         "complete": 2,
         "incomplete": 0,
         "peers": [{
-            "ip" : "1234",
+            "ip" : b"1234",
             "port": 4567
         }]
     }).asBytes()
@@ -18,7 +18,7 @@ def test_decimal_and_dict():
 
 def test_parse_bencoded_dict():
 
-    input = 'd8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee'
+    input = b'd8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee'
     resp = bencoder.parse_bencoded_message(input)
 
     assert resp == dict({
@@ -26,7 +26,7 @@ def test_parse_bencoded_dict():
         "complete": 2,
         "incomplete": 0,
         "peers": [{
-            "ip" : "1234",
+            "ip" : b"1234",
             "port": 4567
         }]
     })
