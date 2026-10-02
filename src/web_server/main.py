@@ -15,12 +15,13 @@ import ssl
 from urllib.parse import urlparse, parse_qs
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import debugpy
-
+import time
 _logger = get_logger('root')
 try:
-    debugpy.listen(('0.0.0.0', 5678))
+    # Assumes the 
+    debugpy.connect(('127.0.0.1', 5678))
 except Exception:
-    _logger.warning('debugpy port already in use!')
+    _logger.warning('cannot connect to debugger')
 
 
 _logger.info('Starting app')
@@ -60,6 +61,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         self._do_verb("POST")
 
+    def do_DELETE(self):
+        self._do_verb("DELETE")
+
     def _do_verb(self, verb: str):
         responseFuncs = ResponseFuncs(
             self.send_response,
@@ -68,12 +72,15 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             self.wfile
         )
 
+        authenticated_user_id = None
         # Run all middleware
         if self._get_path_only() not in _unauthenticated_routes:
-            authentication_middleware.handle(
+            authenticated_user_id = authentication_middleware.handle(
                 authentication_header=self.headers.get('Authorization'), 
                 cookie_header=self.headers.get('Cookie'),
                 res=responseFuncs)
+            if authenticated_user_id is None:
+                return
 
 
         # Then handle the request 
@@ -90,6 +97,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
         reqAttrs = RequestAttrs(
+            authenticated_user_id=authenticated_user_id,
             client_ip=self.client_address[0],
             query_params=self._get_query_params(),
             content_type=self.headers.get('Content-Type'),
@@ -102,6 +110,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 handler.handle_get(reqAttrs, responseFuncs)
             elif verb == "POST":
                 handler.handle_post(reqAttrs, responseFuncs)
+            elif verb == "DELETE":
+                handler.handle_delete(reqAttrs, responseFuncs)
             else:
                 not_found_handler.handle_get(reqAttrs,responseFuncs)
 
@@ -114,19 +124,21 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         return self.path.split('?')[0]
 
 server_address_bind = ('localhost', args.server_port)
-httpd = HTTPServer(server_address_bind, SimpleHTTPRequestHandler)
+with HTTPServer(server_address_bind, SimpleHTTPRequestHandler) as httpd:
+    if not args.disable_https:
+        _logger.info("Running with HTTPS")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain('.certs/cert.pem', '.certs/key.pem')
+        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+    else:
+        _logger.info("Running on HTTP plaintext")
 
-if not args.disable_https:
-    _logger.info("Running with HTTPS")
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain('.certs/cert.pem', '.certs/key.pem')
-    httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
-else:
-    _logger.info("Running on HTTP plaintext")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        _logger.info("recieved shutdown signal")
+    except Exception as e:
+        _logger.info(e)
 
-try:
-    httpd.serve_forever()
-except KeyboardInterrupt:
-    httpd.server_close()
-
+time.sleep(1) # Give time to return http socket back to OS
 _logger.info("Shut down server")

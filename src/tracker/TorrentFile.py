@@ -23,23 +23,33 @@ class TorrentFile:
                 assert isinstance(path, bytes)
                 self.file_names.append(path.decode('utf-8'))
 
-    def _get_info(self) -> dict:
+    def get_info(self) -> dict:
         info = self.torrent_dict['info']
         assert isinstance(info, dict)
         return info
 
     def _get_info_files(self) -> list:
-        files = self._get_info()['files']
+        files = self.get_info()['files']
         assert isinstance(files, list)
         return files
 
     def compute_info_hash(self) -> bytes:
-        info_bencoded = Bencoder().withDict(self._get_info()).asBytes()
+        info_bencoded = Bencoder().withDict(self.get_info()).asBytes()
         hash =hashlib.sha1(info_bencoded).digest()
         return hash
-
 
     def get_total_file_size(self):
         return self.total_size
 
+
+def check_info_for_errors(torrent_file: TorrentFile) -> str | None:
+    """
+    Checks a given torrent file if it contains valid structure to be accepted by
+    this tracker. Returns a string describing the error or None if it is accepted.
+    Short circuits upon the first error encountered.
+    """
+
+    info = torrent_file.get_info()
+    if 'private' not in info or info['private'] != 1:
+        return "Must be private torrent"
 

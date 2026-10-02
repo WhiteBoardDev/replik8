@@ -20,7 +20,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(log_data, indent=4)
 
 def get_logger(name: str,) -> Logger:
-    logger = logging.getLogger("app_logger")
+    logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
     handler = logging.StreamHandler()
     handler.setFormatter(JsonFormatter())

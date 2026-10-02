@@ -48,4 +48,6 @@ def handle(authentication_header: str | None, cookie_header: str | None, res: Re
 def _send_unauth(res: ResponseFuncs):
     res.send_response(401)
     res.send_header("WWW-Authenticate", "Basic realm=\"Protected Area\"")
+    res.send_header("Content-Length", "0")
+    res.end_headers()
             

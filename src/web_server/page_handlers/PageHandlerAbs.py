@@ -55,6 +55,7 @@ class ResponseFuncs:
 
 @dataclass
 class RequestAttrs:
+    authenticated_user_id: str | None
     client_ip: str
     query_params: dict[str, list[str]]
     content_type: str | None
@@ -71,4 +72,6 @@ class PageHandlerAbs(ABC):
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        raise NotImplementedError()
+    def handle_delete(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()

@@ -1,5 +1,7 @@
-from tracker.TorrentFile import TorrentFile
-from tracker.registry.torrent_registry import add_new_item
+from tracker.InvalidUserInputError import InvalidUserInputError
+from tracker.TorrentFile import TorrentFile, check_info_for_errors
+from tracker.registry.RegistryItem import RegistryItem
+from tracker.registry.torrent_registry import add_new_item,get_by_info_hash
 from tracker.bencoder import parse_bencoded_message
 import web_server.templates.template_render as template_render
 from dataclasses import dataclass
@@ -66,6 +68,13 @@ def _find_boundary_with_form_input(field_name: str, boundaries: list[BoundaryDat
             return boundary
     return None
 
+
+def _get_field_value_as_str(field_name: str, boundaries: list[BoundaryData]) -> None | str:
+    boundary = _find_boundary_with_form_input(field_name, boundaries)
+    if boundary is None:
+        return None
+    return boundary.file_content.decode()
+
 class AddTorrentHandler(PageHandlerAbs):
 
     @override
@@ -74,10 +83,14 @@ class AddTorrentHandler(PageHandlerAbs):
 
     @override
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        self._send_add_torrent_page(req, res, None)
+
+    def _send_add_torrent_page(self, req: RequestAttrs, res: ResponseFuncs, error: str | None):
         res.send_response(200)
         res.send_header("Content-Type", "text/html")
         res.end_headers()
         res.wfile.write(template_render.render("add_torrent.html.jinja", {
+            "error": error,
         }))
 
     @override
@@ -126,20 +139,33 @@ class AddTorrentHandler(PageHandlerAbs):
             file_name=boundary_with_file.headers[_content_disposition].split('=')[-1].strip().replace('"', ''),
             file_contents=boundary_with_file.file_content
         )
-        add_new_item(
-            torrent_file=torrent_file, 
-            user_id='TODO',
-            description="TODO",
-            path=boundary_with_registry_path.file_content.strip().decode()
-            )
 
-        content = b'go away. im not ready yet'
-        res.send_response(200)
-        res.send_header("Content-Type", "text/html")
-        res.send_header("Content-Length", str(len(content)))
-        res.end_headers()
-        res.wfile.write(content)
+        error = check_info_for_errors(torrent_file)
+        if error is not None:
+            self._send_add_torrent_page(req, res, error)
+        else:
+            assert req.authenticated_user_id is not None
+            resp = add_new_item(
+                torrent_file=torrent_file, 
+                user_id=req.authenticated_user_id,
+                description=_get_field_value_as_str("description", form_data) or "",
+                path=boundary_with_registry_path.file_content.strip().decode()
+                )
+            if isinstance(resp, InvalidUserInputError):
+                self._send_add_torrent_page(req, res, resp.message)
+            else:
+                registry_item = get_by_info_hash(torrent_file.compute_info_hash())
+                assert isinstance(registry_item, RegistryItem)
+                res.send_response(200)
+                res.send_header("Content-Type", "text/html")
+                res.end_headers()
+                res.wfile.write(template_render.render("registry_item_detail.html.jinja", {
+                "registry_item_detail" : {
+                    **registry_item.as_dict(),
+                    "path_location": registry_item.path.split('/')[1:],
+                    "delete_url": req.full_path + f"?info_hash={registry_item.info_hash.hex()}"
+                    }
 
-        # TODO save torrent into registry
+                }))
 
         

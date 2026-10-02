@@ -1,4 +1,4 @@
-from .registry_data_access import get_by_path
+from .internal.registry_data_access import get_by_path
 from dataclasses import dataclass
 from tracker.datastore.connection import get_db
 from typing import Set
