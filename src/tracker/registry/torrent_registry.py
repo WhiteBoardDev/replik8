@@ -68,7 +68,7 @@ def add_new_item(torrent_file: TorrentFile, user_id: str, description: str, path
     info_hash = updated_torrent.compute_info_hash()
     _validate_path(path)
     registry_item = RegistryItem(
-        name=updated_torrent.file_name,
+        name=updated_torrent.file_name.removesuffix('.torrent'),
         path=path,
         info_hash=info_hash,
         info_bytes=Bencoder().withDict(updated_torrent.get_info()).asBytes(),

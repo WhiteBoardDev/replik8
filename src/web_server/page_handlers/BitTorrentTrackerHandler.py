@@ -1,3 +1,4 @@
+from tracker.InvalidUserInputError import InvalidUserInputError
 from web_server.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
 from tracker.users import authenticate_user_by_peer_key
 from tracker.annouce_response import response_to_annouce
@@ -11,6 +12,7 @@ from tracker import annouce_request
 _logger = get_logger("BitTorrentTrackerHandler")
 
 unauthenticated_resp = StatusCodeOnlyHandler(401)
+invalid_input_resp = StatusCodeOnlyHandler(400)
 
 class BitTorrentTrackerHandler(PageHandlerAbs):
 
@@ -27,19 +29,23 @@ class BitTorrentTrackerHandler(PageHandlerAbs):
             unauthenticated_resp.handle_get(req, res)
         else:
             caller_annouce_request= annouce_request.parse(
-                peer_key, 
                 req.query_params, 
                 req.client_ip,
                 user_id)
-            _logger.info("Incoming announce", extra={"context" :dataclasses.asdict(caller_annouce_request)})
+            log_context = dataclasses.asdict(caller_annouce_request)
+            log_context['info_hash'] = log_context['info_hash'].hex()
+            _logger.info("Incoming announce", extra={"context": log_context})
             response = response_to_annouce(caller_annouce_request)
-            response_bytes = response.serialize()
-            _logger.info("Annouce Response", extra={ "context" : {"resp": str(response_bytes)}})
-            res.send_response(200)
-            res.send_header("Content-Type","application/x-bittorrent")
-            res.send_header("Content-Length", str(len(response_bytes)))
-            res.end_headers()
-            res.wfile.write(response_bytes)
+            if isinstance(response, InvalidUserInputError):
+                invalid_input_resp.handle_get(req, res)
+            else:
+                response_bytes = response.serialize()
+                _logger.info("Annouce Response", extra={ "context" : {"resp": str(response_bytes)}})
+                res.send_response(200)
+                res.send_header("Content-Type","application/x-bittorrent")
+                res.send_header("Content-Length", str(len(response_bytes)))
+                res.end_headers()
+                res.wfile.write(response_bytes)
 
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         return super().handle_post(req, res)

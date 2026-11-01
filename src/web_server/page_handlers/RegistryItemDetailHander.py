@@ -1,3 +1,5 @@
+from tracker.users import get_user_by_id
+from tracker.peers import get_peer_stats, PeerStats
 import shared_utils.app_logging
 from tracker.InvalidUserInputError import InvalidUserInputError
 import web_server.templates.template_render as template_render
@@ -36,22 +38,34 @@ class RegistryItemDetailHandler(PageHandlerAbs):
 
         info_hash = bytes.fromhex(info_hash_hex)
         registry_item = reg.get_by_info_hash(info_hash)
-
+        peer_stats = get_peer_stats(info_hash)
+        if peer_stats is None:
+            _logger.error(f"Unable to resolve peer stats for info hash {info_hash_hex}")
+            peer_stats = PeerStats(-1, -1)
         if isinstance(registry_item, InvalidUserInputError):
             _logger.warning(registry_item.message)
             res.send_response(400)
             res.end_headers()
             res.wfile.write(b"Bad user input")
         else:
+            user_name = get_user_by_id(registry_item.owner_user_id)
+            if user_name is None:
+                user_name = ""
+            else:
+                user_name = user_name.name
+
             res.send_response(200)
             res.send_header("Content-Type", "text/html")
             res.end_headers()
             res.wfile.write(template_render.render("registry_item_detail.html.jinja", {
             "registry_item_detail" : {
-                **registry_item.as_dict(),
+                    **registry_item.as_dict(),
+                    "user_name": user_name,
                     "path_location": registry_item.path.split('/')[1:],
                     "delete_url": req.full_path + f"?info_hash={info_hash_hex}",
-                    "download_url": f"/api/torrent?info_hash={info_hash_hex}"
+                    "download_url": f"/api/torrent?info_hash={info_hash_hex}",
+                    "seeder_count": peer_stats.seeders,
+                    "leecher_count": peer_stats.leechers
                 }
             }))
 
@@ -74,4 +88,6 @@ class RegistryItemDetailHandler(PageHandlerAbs):
             res.wfile.write(delete_result.message.encode())
         else:
             res.send_response(200)
+            res.send_header("Content-Type", "text/html")
             res.end_headers() 
+            res.wfile.write("</nbsp>".encode())

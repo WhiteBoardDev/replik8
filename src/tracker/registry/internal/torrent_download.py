@@ -7,6 +7,9 @@ from tracker.registry.RegistryItem import RegistryItem
 from tracker.registry.torrent_registry import get_item_by_info_hash 
 
 
+def _registry_item_name_to_file_name(name: str) -> str:
+       return f"{name}.torrent"
+
 def _registry_item_to_bencoded(registry_item: RegistryItem,
                                announce_url: str) -> bytes:
 
@@ -19,7 +22,7 @@ def _registry_item_to_bencoded(registry_item: RegistryItem,
 
     # Sanity check to ensure construction of info is valid
 
-    computed_info_hash = TorrentFile(registry_item.name, bencoded).compute_info_hash()
+    computed_info_hash = TorrentFile(_registry_item_name_to_file_name(registry_item.name), bencoded).compute_info_hash()
     assert computed_info_hash == registry_item.info_hash, "Failed to construct info hash that matches registry item"
 
     return bencoded
@@ -39,5 +42,5 @@ def bencode_torrent_for_user(user_id: str,
         if user is None:
                 return InvalidUserInputError("user not found")
 
-        return (registry_item.name, _registry_item_to_bencoded(registry_item,
+        return (_registry_item_name_to_file_name(registry_item.name), _registry_item_to_bencoded(registry_item,
                                           f"{announce_url_base}/{user.peer_key}"))

@@ -122,7 +122,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def _get_query_params(self):
         parsed_url = urlparse(self.path)
-        query_parameters = parse_qs(parsed_url.query)
+        # latin1 encoding important to propertly parse info_hash raw bytes on announce request
+        query_parameters = parse_qs(parsed_url.query, encoding='latin1')
         return query_parameters
 
     def _get_path_only(self) -> str:

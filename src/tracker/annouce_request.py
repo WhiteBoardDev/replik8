@@ -14,12 +14,11 @@ def _first_param_or_throw(key: str, params: dict[str, list[str]]) -> str:
     return possible[0]
     
 
-def parse(peer_key: str, query_params: dict[str, list[str]], client_ip: str, user_id: str) -> AnnounceRequest:
+def parse(query_params: dict[str, list[str]], client_ip: str, user_id: str) -> AnnounceRequest:
     return AnnounceRequest(
         ip=_first_param_or_none('ip', query_params) or client_ip,
-        peer_key=peer_key,
         user_id=user_id,
-        info_hash=_first_param_or_throw('info_hash', query_params),
+        info_hash=_first_param_or_throw('info_hash', query_params).encode('latin1'),
         peer_id=_first_param_or_throw('peer_id', query_params),
         port=_first_param_or_throw('port', query_params),
         uploaded=_first_param_or_throw('uploaded', query_params),
@@ -32,9 +31,8 @@ def parse(peer_key: str, query_params: dict[str, list[str]], client_ip: str, use
 @dataclass
 class AnnounceRequest():
     ip: str
-    peer_key: str
     user_id: str
-    info_hash: str
+    info_hash: bytes
     peer_id: str
     port: str 
     uploaded: str # base 10 ascii

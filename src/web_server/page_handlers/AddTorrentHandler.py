@@ -150,18 +150,11 @@ class AddTorrentHandler(PageHandlerAbs):
         if isinstance(info_hash, InvalidUserInputError):
             self._send_add_torrent_page(req, res, info_hash.message)
         else:
-            registry_item = get_by_info_hash(info_hash)
-            assert isinstance(registry_item, RegistryItem)
             res.send_response(200)
             res.send_header("Content-Type", "text/html")
             res.end_headers()
-            res.wfile.write(template_render.render("registry_item_detail.html.jinja", {
-            "registry_item_detail" : {
-                **registry_item.as_dict(),
-                "path_location": registry_item.path.split('/')[1:],
-                "delete_url": req.full_path + f"?info_hash={registry_item.info_hash.hex()}"
-                }
-
+            res.wfile.write(template_render.render("add_torrent_success.html.jinja", {
+                "right_col_target": f"/registry-item-detail?info_hash={info_hash.hex()}"
             }))
 
         
