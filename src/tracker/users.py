@@ -1,6 +1,6 @@
 from tracker.datastore.connection import get_db
 from enum import Enum
-from sqlite_utils.db import Table
+from sqlite_utils.db import Table, NotFoundError
 import hashlib
 import secrets
 import string
@@ -20,7 +20,7 @@ def _users_table() -> Table:
     return get_db().table("users")
 
 def _generate_secure_string(length):
-    characters = string.ascii_letters + string.digits + string.punctuation
+    characters = string.ascii_letters + string.digits 
     return ''.join(secrets.choice(characters) for _ in range(length))
 
 def _hash_pass(plaintext_pass: str) -> tuple:
@@ -52,7 +52,7 @@ def create_user(name: str, plaintext_password: str, role: UserRole):
     )
 
     table = _users_table()
-    table.insert(asdict(user))
+    table.insert(asdict(user), pk='id')
     return {
         "id": user.id 
     }
@@ -70,7 +70,16 @@ def authenticate_user(name: str, password: str) -> str | None:
             return user['id']
     return None
 
-
+def authenticate_user_by_peer_key(peer_key: str) -> str | None:
+    """
+    Authenticates the user by taking in their peer key.
+    Returns user_id when success, otherwise none.
+    """
+    table = _users_table()
+    possible_users = table.rows_where("peer_key=?", [peer_key])
+    for user in possible_users:
+            return user['id']
+    return None
 
 def root_user_check():
     table = _users_table()
@@ -92,3 +101,11 @@ def get_user_from_key(plaintext_key: str) -> User | None:
     except StopIteration:
        return None 
     return User(**first)
+
+def get_user_by_id(user_id: str) -> User | None:
+    table = _users_table()
+    try:
+        record = table.get([user_id])
+        return User(**record)
+    except NotFoundError:
+        return None

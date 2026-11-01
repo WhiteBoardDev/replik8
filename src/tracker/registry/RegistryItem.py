@@ -20,6 +20,11 @@ class RegistryItem():
     info_hash: bytes
 
     """
+    The bytes of the bencoded info key
+    """
+    info_bytes: bytes
+
+    """
     The owner of the registry item
     """
     owner_user_id: str
@@ -38,8 +43,14 @@ class RegistryItem():
     """
     The names of the files contained within the torrent
     """
-    files: list[str]
+    files: list[RegistryItemFile] 
 
 
     def as_dict(self):
         return dataclasses.asdict(self)
+
+
+@dataclass
+class RegistryItemFile:
+    path: str
+    length: int

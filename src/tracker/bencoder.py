@@ -1,16 +1,22 @@
 from dataclasses import dataclass
 from re import I
-from typing import Self, Iterator
+from typing import Self, Iterator, Sequence
 from io import StringIO
+
+
+type AcceptedBencoderTypes = dict[str, AcceptedBencoderTypes] | Sequence[AcceptedBencoderTypes] | str | int | bytes
 
 class Bencoder():
 
     def __init__(self):
         self.message = bytearray()
 
-    def withString(self, item: bytes) -> Self:
+    def withString(self, item: bytes | str) -> Self:
         self.message.extend(f"{len(item)}:".encode())
-        self.message.extend(item)
+        if isinstance(item, bytes):
+            self.message.extend(item)
+        else:
+            self.message.extend(item.encode())
         return self
     
     def withInt(self, item: int) -> Self:
@@ -18,28 +24,30 @@ class Bencoder():
         self.message.extend(f"i{base10}e".encode())
         return self
 
-    def withDict(self, items: dict[str, str | int | dict | list]) -> Self:
+    def withDict(self, items: dict[str, AcceptedBencoderTypes]) -> Self:
         self.message.extend('d'.encode())
         for key in sorted(items.keys()):
             self.withString(key.encode())
             val = items.get(key)
             if isinstance(val, bytes):
                 self.withString(val)
+            elif isinstance(val, str):
+                self.withString(val)
             elif isinstance(val, int):
                 self.withInt(val)
             elif isinstance(val, dict):
                 self.withDict(val)
-            elif isinstance(val, list):
+            elif isinstance(val, Sequence):
                 self.withList(val)
             else:
                 raise Exception('unable to encode value of dict due to unsupported type')
         self.message.extend("e".encode())
         return self
     
-    def withList(self, items: list[str | int | dict]) -> Self:
+    def withList(self, items: Sequence[AcceptedBencoderTypes]) -> Self:
         self.message.extend("l".encode())
         for item in items:
-            if isinstance(item, bytes):
+            if isinstance(item, bytes) or isinstance(item, str):
                 self.withString(item)
             elif isinstance(item, int):
                 self.withInt(item)
@@ -152,5 +160,5 @@ def parse_bencoded_message(input: bytes) -> dict | list | int | bytes:
         elif char == 'l':
             return _parse_list(message_iter)
         else:
-            raise Exception("unable to parse bencoded message")
-    raise Exception("unable to parse bencoded message")
+            raise Exception("unable to parse bencoded message due to unsupported type")
+    raise Exception("unable to parse bencoded message due to empty input")

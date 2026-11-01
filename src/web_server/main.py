@@ -1,3 +1,4 @@
+from web_server.page_handlers.RegistryItemDownloadHandler import RegistryItemDownloadHandler
 from .page_handlers.RegistryItemDetailHander import RegistryItemDetailHandler
 from .page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
 from .page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
@@ -31,6 +32,9 @@ arg_parser = argparse.ArgumentParser(
 
 arg_parser.add_argument("--disable_https", default=False)
 arg_parser.add_argument("--server_port", default=8080)
+arg_parser.add_argument("--announce_url")
+
+
 args = arg_parser.parse_args()
 
 _tracker_handler = BitTorrentTrackerHandler()
@@ -41,6 +45,7 @@ _all_route_handlers: list[PageHandlerAbs] = [
     RegistryTreeItemCollapsed(),
     RegistryTreeItemExpanded(),
     RegistryItemDetailHandler(),
+    RegistryItemDownloadHandler(announce_url=args.announce_url),
     _tracker_handler
 ]
 
@@ -49,7 +54,7 @@ not_found_handler = StatusCodeOnlyHandler(404)
 _exact_route_paths = { handler.get_routing_config().path: handler for handler in _all_route_handlers if handler.get_routing_config().match_type.name == MatchType.EXACT.name}
 _starting_with_route_paths = [handler for handler in _all_route_handlers if handler.get_routing_config().match_type.name == MatchType.STARTS_WITH.name]
 
-_unauthenticated_routes = set([_tracker_handler.get_routing_config().path])
+_unauthenticated_routes = set([])
 
 root_user_check()
 
@@ -74,7 +79,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
         authenticated_user_id = None
         # Run all middleware
-        if self._get_path_only() not in _unauthenticated_routes:
+        if not self._get_path_only().startswith(_tracker_handler.get_routing_config().path):
             authenticated_user_id = authentication_middleware.handle(
                 authentication_header=self.headers.get('Authorization'), 
                 cookie_header=self.headers.get('Cookie'),

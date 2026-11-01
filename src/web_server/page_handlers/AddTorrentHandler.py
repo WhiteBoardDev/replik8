@@ -1,5 +1,5 @@
 from tracker.InvalidUserInputError import InvalidUserInputError
-from tracker.TorrentFile import TorrentFile, check_info_for_errors
+from tracker.TorrentFile import TorrentFile 
 from tracker.registry.RegistryItem import RegistryItem
 from tracker.registry.torrent_registry import add_new_item,get_by_info_hash
 from tracker.bencoder import parse_bencoded_message
@@ -140,32 +140,28 @@ class AddTorrentHandler(PageHandlerAbs):
             file_contents=boundary_with_file.file_content
         )
 
-        error = check_info_for_errors(torrent_file)
-        if error is not None:
-            self._send_add_torrent_page(req, res, error)
+        assert req.authenticated_user_id is not None
+        info_hash = add_new_item(
+            torrent_file=torrent_file, 
+            user_id=req.authenticated_user_id,
+            description=_get_field_value_as_str("description", form_data) or "",
+            path=boundary_with_registry_path.file_content.strip().decode()
+            )
+        if isinstance(info_hash, InvalidUserInputError):
+            self._send_add_torrent_page(req, res, info_hash.message)
         else:
-            assert req.authenticated_user_id is not None
-            resp = add_new_item(
-                torrent_file=torrent_file, 
-                user_id=req.authenticated_user_id,
-                description=_get_field_value_as_str("description", form_data) or "",
-                path=boundary_with_registry_path.file_content.strip().decode()
-                )
-            if isinstance(resp, InvalidUserInputError):
-                self._send_add_torrent_page(req, res, resp.message)
-            else:
-                registry_item = get_by_info_hash(torrent_file.compute_info_hash())
-                assert isinstance(registry_item, RegistryItem)
-                res.send_response(200)
-                res.send_header("Content-Type", "text/html")
-                res.end_headers()
-                res.wfile.write(template_render.render("registry_item_detail.html.jinja", {
-                "registry_item_detail" : {
-                    **registry_item.as_dict(),
-                    "path_location": registry_item.path.split('/')[1:],
-                    "delete_url": req.full_path + f"?info_hash={registry_item.info_hash.hex()}"
-                    }
+            registry_item = get_by_info_hash(info_hash)
+            assert isinstance(registry_item, RegistryItem)
+            res.send_response(200)
+            res.send_header("Content-Type", "text/html")
+            res.end_headers()
+            res.wfile.write(template_render.render("registry_item_detail.html.jinja", {
+            "registry_item_detail" : {
+                **registry_item.as_dict(),
+                "path_location": registry_item.path.split('/')[1:],
+                "delete_url": req.full_path + f"?info_hash={registry_item.info_hash.hex()}"
+                }
 
-                }))
+            }))
 
         
