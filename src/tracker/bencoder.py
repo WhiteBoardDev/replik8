@@ -4,10 +4,16 @@ from typing import Self, Iterator, Sequence
 from io import StringIO
 
 
-type AcceptedBencoderTypes = dict[str, AcceptedBencoderTypes] | Sequence[AcceptedBencoderTypes] | str | int | bytes
+type AcceptedBencoderTypes = (
+    dict[str, AcceptedBencoderTypes]
+    | Sequence[AcceptedBencoderTypes]
+    | str
+    | int
+    | bytes
+)
 
-class Bencoder():
 
+class Bencoder:
     def __init__(self):
         self.message = bytearray()
 
@@ -18,16 +24,16 @@ class Bencoder():
         else:
             self.message.extend(item.encode())
         return self
-    
+
     def withInt(self, item: int) -> Self:
         base10 = str(item)
         self.message.extend(f"i{base10}e".encode())
         return self
 
     def withDict(self, items: dict[str, AcceptedBencoderTypes]) -> Self:
-        self.message.extend('d'.encode())
+        self.message.extend("d".encode())
         for key in sorted(items.keys()):
-            self.withString(key.encode())
+            self.withString(key)
             val = items.get(key)
             if isinstance(val, bytes):
                 self.withString(val)
@@ -40,10 +46,12 @@ class Bencoder():
             elif isinstance(val, Sequence):
                 self.withList(val)
             else:
-                raise Exception('unable to encode value of dict due to unsupported type')
+                raise Exception(
+                    "unable to encode value of dict due to unsupported type"
+                )
         self.message.extend("e".encode())
         return self
-    
+
     def withList(self, items: Sequence[AcceptedBencoderTypes]) -> Self:
         self.message.extend("l".encode())
         for item in items:
@@ -54,13 +62,15 @@ class Bencoder():
             elif isinstance(item, dict):
                 self.withDict(item)
             else:
-                raise Exception('unable to encode value of list due to unsupported type')
+                raise Exception(
+                    "unable to encode value of list due to unsupported type"
+                )
         self.message.extend("e".encode())
         return self
 
-
     def asBytes(self) -> bytes:
         return bytes(self.message)
+
 
 def _parse_int(message: Iterator[int]) -> int:
     int_buffer = StringIO()
@@ -68,11 +78,12 @@ def _parse_int(message: Iterator[int]) -> int:
         char = chr(byte)
         if char.isdigit():
             int_buffer.write(char)
-        elif char == 'e':
+        elif char == "e":
             break
         else:
-            raise Exception('malformed bencoded int')
+            raise Exception("malformed bencoded int")
     return int(int_buffer.getvalue())
+
 
 def _parse_str(prev_char: str, message: Iterator[int]) -> bytes:
     assert len(prev_char) == 1
@@ -82,11 +93,13 @@ def _parse_str(prev_char: str, message: Iterator[int]) -> bytes:
         char = chr(byte)
         if char.isdigit():
             int_buffer.write(char)
-        elif char == ':':
+        elif char == ":":
             break
         else:
-            raise Exception('malformed bencoded string')
+            raise Exception("malformed bencoded string")
     str_len = int(int_buffer.getvalue())
+    if str_len == 0:
+        return bytes()
     val_buff = bytearray(str_len)
     chars_written = 0
     for char in message:
@@ -96,68 +109,71 @@ def _parse_str(prev_char: str, message: Iterator[int]) -> bytes:
             break
     return bytes(val_buff)
 
+
 def _parse_list(message: Iterator[int]) -> list:
     result = list()
     for current_byte in message:
         current_char = chr(current_byte)
         if current_char.isdigit():
             result.append(_parse_str(current_char, message))
-        elif current_char == 'i':
+        elif current_char == "i":
             result.append(_parse_int(message))
-        elif current_char == 'l':
+        elif current_char == "l":
             result.append(_parse_list(message))
-        elif current_char == 'd':
+        elif current_char == "d":
             result.append(_parse_dict(message))
-        elif current_char == 'e':
+        elif current_char == "e":
             return result
         else:
             raise Exception("unable to parse bencoded list")
     raise Exception("unable to parse bencoded list")
 
+
 def _parse_dict(message: Iterator[int]) -> dict:
     result = dict()
-    current_dict_key: int | str | None = None
+    current_dict_key: int | bytes | None = None
     for current_byte in message:
         current_char = chr(current_byte)
         if current_char.isdigit():
-            str_val = _parse_str(current_char, message) 
+            str_val = _parse_str(current_char, message)
             if current_dict_key is None:
-                current_dict_key = str_val.decode('utf-8')
+                current_dict_key = str_val
             else:
                 result[current_dict_key] = str_val
                 current_dict_key = None
-        elif current_char == 'i':
+        elif current_char == "i":
             val = _parse_int(message)
             if current_dict_key is None:
                 current_dict_key = val
             else:
                 result[current_dict_key] = val
                 current_dict_key = None
-        elif current_char == 'l':
+        elif current_char == "l":
             assert current_dict_key is not None
             result[current_dict_key] = _parse_list(message)
             current_dict_key = None
-        elif current_char == 'd':
+        elif current_char == "d":
             assert current_dict_key is not None
             result[current_dict_key] = _parse_dict(message)
             current_dict_key = None
-        elif current_char == 'e':
+        elif current_char == "e":
             return result
         else:
-            raise Exception('unable to parse dict from message')
-    raise Exception('unable to parse dict from message')
+            raise Exception("unable to parse dict from message")
+    raise Exception("unable to parse dict from message")
+
 
 def parse_bencoded_message(input: bytes) -> dict | list | int | bytes:
     message_iter = iter(input)
     for byte in message_iter:
         char = chr(byte)
-        if char == 'd': 
+        if char == "d":
             return _parse_dict(message_iter)
-        elif char == 'i':
+        elif char == "i":
             return _parse_int(message_iter)
         elif char.isdigit():
             return _parse_str(char, message_iter)
-        elif char == 'l':
+        elif char == "l":
             return _parse_list(message_iter)
         else:
             raise Exception("unable to parse bencoded message due to unsupported type")

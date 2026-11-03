@@ -10,71 +10,69 @@ _logger = app_logging.get_logger("torrent_registry")
 
 
 def _get_table() -> Table:
-    table = get_db().table('torrent_registry')
+    table = get_db().table("torrent_registry")
     return table
+
 
 def _build_path_set() -> Set[str]:
     """
     Fetches all unique paths from the registry and puts them in a set.
     """
     table = _get_table()
-    unique_paths = table.rows_where(
-        select="path",
-        where="1=1 group by path"
-    )
-    paths = set(['/'])
+    unique_paths = table.rows_where(select="path", where="1=1 group by path")
+    paths = set(["/"])
     for path_row in unique_paths:
-        path = path_row['path']
+        path = path_row["path"]
         if not isinstance(path, str):
-            raise Exception('path should always be a string!!')
+            raise Exception("path should always be a string!!")
 
         paths.add(path)
         for i, char in enumerate(path):
-            if char == '/' and i > 0:
+            if char == "/" and i > 0:
                 paths.add(path[0:i])
 
-    _logger.info("Built registry paths", extra={
-        "context" : {
-            "paths" : sorted([x for x in paths])
-        }
-    }) 
+    _logger.info(
+        "Built registry paths", extra={"context": {"paths": sorted([x for x in paths])}}
+    )
     return paths
+
 
 """
 Represents a node in a tree structure. Used for representing the path structure of the registry items
 as a tree.
 """
-type NavigationTreeNode = dict[str,NavigationTreeNode]
+type NavigationTreeNode = dict[str, NavigationTreeNode]
+
 
 @dataclass
 class NavigationPath:
     """
     Represents a specific node of the navigation tree. Has some useful
     functions making it easier for the UI to navigate.
-    """    
+    """
 
     full_path: str
 
     @property
     def leaf_path(self):
-        if self.full_path == '/':
+        if self.full_path == "/":
             return None
-        return self.full_path.split('/')[-1]
+        return self.full_path.split("/")[-1]
 
     @property
     def html_safe_path(self):
-        return self.full_path.replace('/', '-')
+        return self.full_path.replace("/", "-")
 
     def as_dict(self):
         return {
-            'full_path': self.full_path,
-            'leaf_path': self.leaf_path,
-            'html_safe_path': self.html_safe_path
-
+            "full_path": self.full_path,
+            "leaf_path": self.leaf_path,
+            "html_safe_path": self.html_safe_path,
         }
 
+
 @dataclass
-class NavigationElementWithRegistryItems():
+class NavigationElementWithRegistryItems:
     """
     Represents a specific node of the navigation tree AND includes
     1. The immediate child paths
@@ -88,18 +86,19 @@ class NavigationElementWithRegistryItems():
     """
     child_paths: list[NavigationPath]
 
-
     """
     Registry Items Located at `path`
     """
     registry_items: list[RegistryItem]
 
-
     def as_dict(self):
         return {
-            'navigation_path': self.navigation_path.as_dict(),
-            'child_paths': [x.as_dict() for x in self.child_paths],
-            'registry_items': [{**x.as_dict(), "info_hash_hex" : x.info_hash.hex()}for x in self.registry_items]
+            "navigation_path": self.navigation_path.as_dict(),
+            "child_paths": [x.as_dict() for x in self.child_paths],
+            "registry_items": [
+                {**x.as_dict(), "info_hash_hex": x.info_hash_v1.hex()}
+                for x in self.registry_items
+            ],
         }
 
 
@@ -111,23 +110,24 @@ def _build_nav_tree(paths: set[str]) -> NavigationTreeNode:
 
     root: NavigationTreeNode = dict()
     for path in paths:
-        if path != '/':
-            path_parts = path.removeprefix('/').split('/')
+        if path != "/":
+            path_parts = path.removeprefix("/").split("/")
             current_node = root
             for path_parth in path_parts:
                 assert len(path_parth) > 0
                 if path_parth not in current_node:
                     current_node[path_parth] = dict()
-                current_node = current_node[path_parth] 
+                current_node = current_node[path_parth]
     return root
 
 
 _registry_paths = _build_path_set()
 _nav_tree_root = _build_nav_tree(_registry_paths)
 
+
 def refresh_nagivation_tree():
     """
-    Refreshes the navigation cache. Needed if any paths change or 
+    Refreshes the navigation cache. Needed if any paths change or
     registry items change
     """
 
@@ -136,17 +136,18 @@ def refresh_nagivation_tree():
     _registry_paths = _build_path_set()
     _nav_tree_root = _build_nav_tree(_registry_paths)
 
+
 def _get_nav_children_of(path: str) -> list[str]:
     """
     Searches the navigation tree
     """
 
-    path_parts = path.split('/') 
+    path_parts = path.split("/")
     current_node = _nav_tree_root
     for part in path_parts:
         if len(part) > 0:
             if part in current_node:
-                current_node = current_node[part] 
+                current_node = current_node[part]
             else:
                 return []
     return [x for x in current_node.keys()]
@@ -154,14 +155,16 @@ def _get_nav_children_of(path: str) -> list[str]:
 
 def get_navigation_at_path(path: str) -> NavigationElementWithRegistryItems:
     """
-    For a given path (examples: "/", "/levelone", "/levelone/leveltwo"), 
+    For a given path (examples: "/", "/levelone", "/levelone/leveltwo"),
     fetches the NavigationElement at that path. The NagivationElement will include
-    the RegistryItems at that path plus child paths which can be traversed into.    
+    the RegistryItems at that path plus child paths which can be traversed into.
     """
 
     return NavigationElementWithRegistryItems(
-            navigation_path=NavigationPath(
-                full_path=path),
-            child_paths = [NavigationPath(f"{path}/{x}".replace('//','/')) for x in _get_nav_children_of(path)],
-            registry_items = get_by_path(path)
+        navigation_path=NavigationPath(full_path=path),
+        child_paths=[
+            NavigationPath(f"{path}/{x}".replace("//", "/"))
+            for x in _get_nav_children_of(path)
+        ],
+        registry_items=get_by_path(path),
     )

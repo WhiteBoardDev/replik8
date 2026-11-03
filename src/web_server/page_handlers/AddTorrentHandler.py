@@ -1,17 +1,24 @@
 from tracker.InvalidUserInputError import InvalidUserInputError
-from tracker.TorrentFile import TorrentFile 
+from tracker.TorrentFile import TorrentFile
 from tracker.registry.RegistryItem import RegistryItem
-from tracker.registry.torrent_registry import add_new_item,get_by_info_hash
+from tracker.registry.torrent_registry import add_new_item, get_by_info_hash
 from tracker.bencoder import parse_bencoded_message
 import web_server.templates.template_render as template_render
 from dataclasses import dataclass
 from io import BufferedIOBase
 from typing import override, NamedTuple
-from .PageHandlerAbs import PageHandlerAbs, RoutingConfig, MatchType, RequestAttrs, ResponseFuncs
+from .PageHandlerAbs import (
+    PageHandlerAbs,
+    RoutingConfig,
+    MatchType,
+    RequestAttrs,
+    ResponseFuncs,
+)
 
 
-_content_type_prefix='multipart/form-data; boundary='
-_max_file_size=1_000_000
+_content_type_prefix = "multipart/form-data; boundary="
+_max_file_size = 1_000_000
+
 
 @dataclass
 class BoundaryData:
@@ -23,27 +30,30 @@ class ParsedBoundary(NamedTuple):
     boundary_data: BoundaryData
     next_boundary: bytes | None
 
+
 def _handle_boundary(boundary: bytes, rfile: BufferedIOBase) -> ParsedBoundary:
     collecting_headers = True
     headers = dict()
-    file_content = bytearray() 
+    file_content = bytearray()
     for line in rfile:
         if collecting_headers:
-            if line == b'\r\n':
+            if line == b"\r\n":
                 collecting_headers = False
                 continue
             else:
-                str_line = line.decode('utf-8')
-                kv = str_line.index(':')
+                str_line = line.decode("utf-8")
+                kv = str_line.index(":")
                 header_key = str_line[:kv]
-                header_value = str_line[kv+1:]
+                header_value = str_line[kv + 1 :]
                 headers[header_key] = header_value
         else:
             if line.startswith(boundary):
                 next_boundary = line.strip()
-                if next_boundary.endswith(b'--'):
+                if next_boundary.endswith(b"--"):
                     next_boundary = None
-                return ParsedBoundary(BoundaryData(bytes(file_content), headers), next_boundary)
+                return ParsedBoundary(
+                    BoundaryData(bytes(file_content), headers), next_boundary
+                )
             else:
                 file_content.extend(line)
                 if len(file_content) >= _max_file_size:
@@ -52,31 +62,42 @@ def _handle_boundary(boundary: bytes, rfile: BufferedIOBase) -> ParsedBoundary:
 
 
 def _parse_form_request(rfile: BufferedIOBase) -> list[BoundaryData]:
-        results = []
-        current_boundary = rfile.__next__().strip()
-        while current_boundary is not None:
-            parsed = _handle_boundary(current_boundary, rfile)
-            results.append(parsed.boundary_data)
-            current_boundary = parsed.next_boundary
+    results = []
+    current_boundary = rfile.__next__().strip()
+    while current_boundary is not None:
+        parsed = _handle_boundary(current_boundary, rfile)
+        results.append(parsed.boundary_data)
+        current_boundary = parsed.next_boundary
 
-        return results
+    return results
+
 
 _content_disposition = "Content-Disposition"
-def _find_boundary_with_form_input(field_name: str, boundaries: list[BoundaryData]) -> BoundaryData | None:
+
+
+def _find_boundary_with_form_input(
+    field_name: str, boundaries: list[BoundaryData]
+) -> BoundaryData | None:
     for boundary in boundaries:
-        if _content_disposition in boundary.headers and f"form-data; name=\"{field_name}\"" in boundary.headers[_content_disposition]:
+        if (
+            _content_disposition in boundary.headers
+            and f'form-data; name="{field_name}"'
+            in boundary.headers[_content_disposition]
+        ):
             return boundary
     return None
 
 
-def _get_field_value_as_str(field_name: str, boundaries: list[BoundaryData]) -> None | str:
+def _get_field_value_as_str(
+    field_name: str, boundaries: list[BoundaryData]
+) -> None | str:
     boundary = _find_boundary_with_form_input(field_name, boundaries)
     if boundary is None:
         return None
     return boundary.file_content.decode()
 
-class AddTorrentHandler(PageHandlerAbs):
 
+class AddTorrentHandler(PageHandlerAbs):
     @override
     def get_routing_config(self):
         return RoutingConfig("/add-torrent", match_type=MatchType.EXACT)
@@ -85,13 +106,20 @@ class AddTorrentHandler(PageHandlerAbs):
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         self._send_add_torrent_page(req, res, None)
 
-    def _send_add_torrent_page(self, req: RequestAttrs, res: ResponseFuncs, error: str | None):
+    def _send_add_torrent_page(
+        self, req: RequestAttrs, res: ResponseFuncs, error: str | None
+    ):
         res.send_response(200)
         res.send_header("Content-Type", "text/html")
         res.end_headers()
-        res.wfile.write(template_render.render("add_torrent.html.jinja", {
-            "error": error,
-        }))
+        res.wfile.write(
+            template_render.render(
+                "add_torrent.html.jinja",
+                {
+                    "error": error,
+                },
+            )
+        )
 
     @override
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs):
@@ -112,49 +140,62 @@ class AddTorrentHandler(PageHandlerAbs):
         - "name" - The user needs to specify a name for the torrent. This comes in
         from the form request and not from the file itself
         - "owner_user_id" - (str) - the user_id of who uploaded it. Stub this out for now to fake it.
-        - "inserted_timestamp - (int) - unix epoch timestamp now() 
+        - "inserted_timestamp - (int) - unix epoch timestamp now()
 
 
         After all that, the handler returns an HTML success page
         """
 
-        assert req.content_type is not None and req.content_type.startswith(_content_type_prefix) == True
+        assert (
+            req.content_type is not None
+            and req.content_type.startswith(_content_type_prefix) == True
+        )
         form_data = _parse_form_request(req.rfile)
 
         boundary_with_file = _find_boundary_with_form_input("file", form_data)
         assert boundary_with_file is not None
 
+        content_disposition_parts = boundary_with_file.headers[
+            "Content-Disposition"
+        ].split(";")
+        filename = (
+            [x.split("=")[-1] for x in content_disposition_parts if "filename" in x][0]
+            .strip()
+            .replace('"', "")
+        )
 
-        content_disposition_parts = boundary_with_file.headers['Content-Disposition'].split(';')
-        filename = [x.split('=')[-1] for x in content_disposition_parts if 'filename' in x][0].strip().replace("\"","")
-
-        assert filename.endswith('.torrent')
-        torrent_dict = parse_bencoded_message(boundary_with_file.file_content)
-
-
-        boundary_with_registry_path = _find_boundary_with_form_input("registry_path", form_data)
+        assert filename.endswith(".torrent")
+        boundary_with_registry_path = _find_boundary_with_form_input(
+            "registry_path", form_data
+        )
         assert boundary_with_registry_path is not None
 
         torrent_file = TorrentFile(
-            file_name=boundary_with_file.headers[_content_disposition].split('=')[-1].strip().replace('"', ''),
-            file_contents=boundary_with_file.file_content
+            file_name=boundary_with_file.headers[_content_disposition]
+            .split("=")[-1]
+            .strip()
+            .replace('"', ""),
+            file_contents=boundary_with_file.file_content,
         )
 
         assert req.authenticated_user_id is not None
         info_hash = add_new_item(
-            torrent_file=torrent_file, 
+            torrent_file=torrent_file,
             user_id=req.authenticated_user_id,
             description=_get_field_value_as_str("description", form_data) or "",
-            path=boundary_with_registry_path.file_content.strip().decode()
-            )
+            path=boundary_with_registry_path.file_content.strip().decode(),
+        )
         if isinstance(info_hash, InvalidUserInputError):
             self._send_add_torrent_page(req, res, info_hash.message)
         else:
             res.send_response(200)
             res.send_header("Content-Type", "text/html")
             res.end_headers()
-            res.wfile.write(template_render.render("add_torrent_success.html.jinja", {
-                "right_col_target": f"/registry-item-detail?info_hash={info_hash.hex()}"
-            }))
-
-        
+            res.wfile.write(
+                template_render.render(
+                    "add_torrent_success.html.jinja",
+                    {
+                        "right_col_target": f"/registry-item-detail?info_hash={info_hash.hex()}"
+                    },
+                )
+            )

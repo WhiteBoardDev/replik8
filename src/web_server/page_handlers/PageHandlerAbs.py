@@ -10,22 +10,26 @@ class MatchType(Enum):
     EXACT = 1
     STARTS_WITH = 2
 
+
 @dataclass
 class RoutingConfig:
-    path: str 
-    match_type: MatchType 
+    path: str
+    match_type: MatchType
+
 
 class Header(NamedTuple):
     key: str
     value: str
 
-class ResponseFuncs:
 
-    def __init__(self,
+class ResponseFuncs:
+    def __init__(
+        self,
         send_response: Callable[[int], None],
         send_header: Callable[[str, str], None],
         end_headers: Callable[[], None],
-        wfile: BufferedIOBase) -> None:
+        wfile: BufferedIOBase,
+    ) -> None:
         self._send_response = send_response
         self._send_header = send_header
         self._end_headers = end_headers
@@ -33,13 +37,11 @@ class ResponseFuncs:
         self._outbound_headers: list[Header] = []
         self._headers_ended = False
 
-
-
     def send_response(self, status_code: int):
         self._response_code = status_code
 
     def send_header(self, key: str, value: str):
-        header = Header(key,value)
+        header = Header(key, value)
         self._outbound_headers.append(header)
 
     def end_headers(self):
@@ -53,6 +55,7 @@ class ResponseFuncs:
         self._end_headers()
         self._headers_ended = True
 
+
 @dataclass
 class RequestAttrs:
     authenticated_user_id: str | None
@@ -64,14 +67,15 @@ class RequestAttrs:
 
 
 class PageHandlerAbs(ABC):
-
     @abstractmethod
     def get_routing_config(self) -> RoutingConfig:
         pass
 
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()
+
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()
+
     def handle_delete(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()

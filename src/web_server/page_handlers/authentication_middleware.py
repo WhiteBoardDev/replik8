@@ -3,6 +3,7 @@ from tracker.users import authenticate_user
 from .PageHandlerAbs import ResponseFuncs
 import base64
 import uuid
+
 _basic = "Basic "
 
 
@@ -13,9 +14,12 @@ TODO - this in memory store is of unbounded size
 """
 _session_store: dict[str, str] = {}
 
-_session_cookie_name = 'rpl_sess'
+_session_cookie_name = "rpl_sess"
 
-def handle(authentication_header: str | None, cookie_header: str | None, res: ResponseFuncs) -> str | None:
+
+def handle(
+    authentication_header: str | None, cookie_header: str | None, res: ResponseFuncs
+) -> str | None:
 
     # Attempt shortcut cache lookup
     if cookie_header is not None:
@@ -25,11 +29,10 @@ def handle(authentication_header: str | None, cookie_header: str | None, res: Re
             if session_key in _session_store:
                 return _session_store[session_key]
 
-
     if authentication_header is not None and authentication_header.startswith(_basic):
         prefix_removed = authentication_header.removeprefix(_basic)
         decoded = base64.b64decode(prefix_removed).decode("utf-8")
-        parts = decoded.split(':')
+        parts = decoded.split(":")
         assert len(parts) == 2
         user = parts[0]
         password = parts[1]
@@ -44,10 +47,8 @@ def handle(authentication_header: str | None, cookie_header: str | None, res: Re
     return None
 
 
-
 def _send_unauth(res: ResponseFuncs):
     res.send_response(401)
-    res.send_header("WWW-Authenticate", "Basic realm=\"Protected Area\"")
+    res.send_header("WWW-Authenticate", 'Basic realm="Protected Area"')
     res.send_header("Content-Length", "0")
     res.end_headers()
-            

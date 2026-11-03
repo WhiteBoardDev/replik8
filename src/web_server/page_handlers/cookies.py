@@ -1,9 +1,10 @@
 from web_server.page_handlers.PageHandlerAbs import ResponseFuncs
 
-def parse_cookie_header(raw_cookie_header: str) -> dict[str,str]:
+
+def parse_cookie_header(raw_cookie_header: str) -> dict[str, str]:
     result = {}
-    for kv_pair in raw_cookie_header.split(';'):
-        parts = kv_pair.split('=')
+    for kv_pair in raw_cookie_header.split(";"):
+        parts = kv_pair.split("=")
         assert len(parts) == 2, "Cookie header malformed"
         result[parts[0]] = parts[1]
     return result

@@ -1,12 +1,13 @@
 import dataclasses
 from dataclasses import dataclass
 
-@dataclass
-class RegistryItem():
 
+@dataclass
+class RegistryItem:
     """
-    Display Name of the item in the registry. Could be a 
+    Display Name of the item in the registry. Could be a
     """
+
     name: str
 
     """
@@ -17,7 +18,8 @@ class RegistryItem():
     """
     The info_hash of the torrent
     """
-    info_hash: bytes
+    info_hash_v1: bytes
+    info_hash_v2: bytes | None
 
     """
     The bytes of the bencoded info key
@@ -28,7 +30,6 @@ class RegistryItem():
     The owner of the registry item
     """
     owner_user_id: str
-
 
     """
     Description
@@ -43,8 +44,7 @@ class RegistryItem():
     """
     The names of the files contained within the torrent
     """
-    files: list[RegistryItemFile] 
-
+    files: list[RegistryItemFile]
 
     def as_dict(self):
         return dataclasses.asdict(self)

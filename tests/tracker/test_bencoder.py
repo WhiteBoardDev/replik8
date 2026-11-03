@@ -2,31 +2,122 @@ from tracker import bencoder
 
 
 def test_decimal_and_dict():
-    resp = bencoder.Bencoder().withDict({
-        "interval": 1800,
-        "complete": 2,
-        "incomplete": 0,
-        "peers": [{
-            "ip" : b"1234",
-            "port": 4567
-        }]
-    }).asBytes()
+    resp = (
+        bencoder.Bencoder()
+        .withDict(
+            {
+                "interval": 1800,
+                "complete": 2,
+                "incomplete": 0,
+                "peers": [{"ip": b"1234", "port": 4567}],
+            }
+        )
+        .asBytes()
+    )
 
-    assert resp == b'd8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee'
-
+    assert (
+        resp
+        == b"d8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee"
+    )
 
 
 def test_parse_bencoded_dict():
 
-    input = b'd8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee'
+    input = b"d8:completei2e10:incompletei0e8:intervali1800e5:peersld2:ip4:12344:porti4567eeee"
     resp = bencoder.parse_bencoded_message(input)
 
-    assert resp == dict({
-        "interval": 1800,
-        "complete": 2,
-        "incomplete": 0,
-        "peers": [{
-            "ip" : b"1234",
-            "port": 4567
-        }]
-    })
+    assert resp == dict(
+        {
+            b"interval": 1800,
+            b"complete": 2,
+            b"incomplete": 0,
+            b"peers": [{b"ip": b"1234", b"port": 4567}],
+        }
+    )
+
+
+def test_single_file_v2():
+    with open("tests/tracker/single_file_bep_v2.torrent", "rb") as f:
+        input = bytearray()
+        while True:
+            chunk = f.read(1024)
+            if chunk is not None and len(chunk) > 0:
+                input.extend(chunk)
+            else:
+                break
+        resp = bencoder.parse_bencoded_message(bytes(input))
+        print(resp)
+        assert resp == dict(
+            {
+                b"created by": b"qBittorrent v5.2.4",
+                b"creation date": 1793558329,
+                b"info": {
+                    b"file tree": {
+                        b"single_file_test.log": {
+                            b"": {
+                                b"length": 345690,
+                                b"pieces root": b"\xcb\xc7\x8a/HP\x9c\xac]\x1bA^\xe5\x1c\xe2a\x0e $C\x08!2;\x14Fh=Y\xfe\x04\xb8",
+                            }
+                        }
+                    },
+                    b"length": 345690,
+                    b"meta version": 2,
+                    b"name": b"single_file_test.log",
+                    b"piece length": 16384,
+                    b"pieces": b"\xfe4\x8a\xa9\x86\xfb$\xb1\xa8m%\x92\x93\xb3\x8c\t;Z\xe5 ~\xf8\xb0N'VR\xf8\xa7\x87;d[\xf6#\xda\x96\x9a\xf2\x1a\x1ac\xbf\xd5~\x1e\x01\x95\xe8\n\xed\t\x189tb\x870.O\xff\n\x10\xd4g\xf5\xda\xd8\x10DY\x076r\xcbfo\xcf\x13l<\x1b\xcd\n\x1a\x84\x86\x1d\xaf\x86\x08\xa0\x8d\x0b\xa9\xb7a\xcf\xe8-P\xb8Xaa\xfc-\x8b\xae\xec\xceP\x1459\xf1\xdb\xaa\r=\xca\xeb\x9a\xc1\xeeFt\xb6\xf1J_5J\xcc\r}\xb4\x80|\x14\x9e\xd7\n\xc2|\x12A\xf7\x85\x9b\x1b\x1c\xb6H\x04\x10:g/\x18\x0e\xdb\x0cd\xe76\x08\xf6n,n\xf0UiT$x?4f~A\x85\xed1w\x14D\xbe\xf6rFcm\nL@\xf7\x02\x8a\xd63\xbc\x19\xdaPR\xca\xd5\xc5\xda@\x01\xaa\xc4\xe0\xc8\xedY\xf9w\xef\xfa\x96r\x81\x0fqjbAtW<\xb8\xb0\x00\xe4t\x19\xabDD:\x84F\xb8G@'\xdb\x18_~\x04C,\xc1j\x9fD\x8a\x89Z*\xf8\xcd\xec\xfeh\x8c*\n7d-LJ\xe3r>\x7f/?\xd0@\x0b\xfa\n[v\xbc\xc3t\x1b\xf42zu\xc1\x16\xe4\x05\xca\xee\xc2r\xb6\xc4;\x04Z}\x03=yL\x1f\xa7\xc8\xcf\x078v\x9f\x92\x08\xbb\x91\x972\xa5f\x1b\xe7\xe8\xbf\xd2W\x19\xe8\xa0\xe6-=\xd4\x89!&\xce\x02P\x10\x1f\x1c\t\x07^9J\xbd\xd5DP\x7ftG\xf8bi\xe1\xdf\xbb\xf5\x01$^\x01\x8fy[\x14n\xab\x0e\x1b\xcb:\xca\xff\xe2\x89\xba\xf1I ~C(;\x89*\xa8Va\xea\\\xaa]\xff\xbdw\x93x\xcf\x05\n\xde\xcb\xa8E&\xa3\xfcsu\x8ck\ne\xe7w\xc5rgB\xc2\x97\x18\xd6",
+                },
+                b"piece layers": {
+                    b"\xcb\xc7\x8a/HP\x9c\xac]\x1bA^\xe5\x1c\xe2a\x0e $C\x08!2;\x14Fh=Y\xfe\x04\xb8": b"\xbf\x90\xcc\x1aZ\x94\xa5/oU\x9e*\x88T\xeb\x0e@\xdaIM\x1c\xb54\x80K\xc9r`\xa1y\xd1\xa8\x19=\xdf\xf5V\xc3\xbc=\x802\xe1\xef\x930\xa5i\x0b\xfe\xd3\xe5\xea\xc7:\x0c3\xf8\x97\x08\xe0\x07\xfe\x96\xac\xf8\xff?\\\xa7\x04\xc1\xb5\x8f\x82\xc16\x12\xa8%\x89\xfb\xd9q0\x07\xb7\x7fcC\xb1\xe7\x1f\x00!\x92\x87FI$\xb0\x93\xda\x0bkY\xbd\xb5\xd8\xf8\xd8\x1c\xac!\xbf\xdc\x06\xcb\x1f\xb5\xc7A\xd5\xabk\xd5\xd81\xb2\x81\xa2J\x19\xe3\xaef\x8f\xcf\xa9\x99|\xcb\x80U\xdc\x1f\xbe\x15n\x1cd\xe2\xa4d\x10\xaa\x06\xc6K\xc2H\x12~p\xe0\xf9#\x05\xed\xd7\x0c\xdb\xfb\x12%\xbbVH\nl,\xe2\x97\xae\nWc\xf5\xcd\xb5\xd1\xa4\xf3\xbd\xeb,\x83\x8fe\x19\xc7HU\xa6(_G\\\xc8M\x13\x86\x81L\xe6\xe4\xbf\xe8\x84#L\x16@\x18N\xa6\x8d\x8e\x938\x1fG\xeb\x04\xf6\xfe\xd2B\xe9l\xff\x1fW\xa7\xd7\x1e\xcad\x8e\x17/\r\r\x8c\xaa\xc5[\xc9\xdc\xe8\x9f\x1e\xcb\xac\r\xbc\xec\xdb\xf4S\xd1B\xb5.\r\xf9\x8f\xdb,\n\x86\xdb\xbe\xfc\xe5-\xc5\xcf\x8a\x8362\x86\xc4\x81j\xeb_\x99\x99\xa8\x1eYw\xc5\n\xd29\xef\xb7\xaeB\xe7\xb3\xd8V)\tEY\x01K\xbf\xe5\x19\xc5\xef[\x14\t\x06\xd4m\xd0\xd7\xd2\x98\x92\xb4q\x1a\x1f\xd9\xd8\x9a\x12\xe1\xbe\x93\xbdm&`W\x95\x19\xcf\x1c\xb8\xc4\x04\xa8\xc8\x93u-\x90w\xf3>B\xfc$\xce@\x80\x19\x11\xb4Y\x19\xecW\xa3\x93s\xd6{\xba\x8a\xf1\xc5\x8a\xe2\xbe\xeb\xf0\x18\x89\xfc\xd0&\x1d\xf3g\xd4\x0f\xb8\xa8\xb2\xe8V\x94\x1e\x172\x88\x05\x19\x0b{\xb0\xcc\x99\x0bi\x13\xddx\xda\xe8\xf5\x05\xb9Y\xeb1\xf8i\x0e\xd7\x89<\xee\xdf\xc15B\x9b\xa7\xdd\xbdF\x05\xa8\x83X\x89\xcb\x80|\x9ew\xfbaD\xe2\x9a\xf3\x0641M\xe4a\x9a1\x9b:n%=\xe3\xe7\xa8\x0b\xf2PW\x8dk\xed@~\x94ME\xe1G(\xd1\xf7\x15\x98JF}\xfe\ng\x81\x8c\\\xbc_\x92{\xe5\x86O\x9a\x9d\xb3\xb8A\xc2{\x98\x9c\xa6q\xe4\xffE\x1e\x9f`$\x8d\xd4\xd3St\xf5\x83\x01#e\x83\x8eR\x04\xe6\x0f\x05\xa7\xf0\xd9K\x98K/\x951\xe8,\xba\x1e+\x110>\xe7\xcad\x15\x89\x05\x1f.k\x96u\x8f\xf5\xfc\x82\xf4M/[\xfd\xd1\x9a\xb5\xcel0\x1e\xf3\x84\xb2\x9f\xc5@!\xb8\xf6\xbe4i\x9c\xf72\xa1\xacs\xdb\x0c\xc5\xea\x1d\xc6f@\x9b\xde\xc4(\xbf\xf1\xbb\x1fC\xfe9\x1e\xc7\x12\xc4\xbeO\xd4\xc7j\x82_\xbcg\xa2'\xf1?\x00\x18GK_\x1f\x9b^0\x03\x12Ij.\x97\xa8z\x8f\x1e\xc0A\x81\xdf\x93#k\xa6u\xc4\x8cT\x0c\xd5\\[\x9b\xf3_\xde,\x06\xf7\x92\x00\xf2\x87\x99\xd6\x97\xb7\xd3"
+                },
+            }
+        )
+
+
+def test_multi_file_v2():
+    with open("tests/tracker/multi_files_bep_v2.torrent", "rb") as f:
+        input = bytearray()
+        while True:
+            chunk = f.read(1024)
+            if chunk is not None and len(chunk) > 0:
+                input.extend(chunk)
+            else:
+                break
+        resp = bencoder.parse_bencoded_message(bytes(input))
+        assert resp == dict(
+            {
+                b"created by": b"qBittorrent v5.2.4",
+                b"creation date": 1793563534,
+                b"info": {
+                    b"file tree": {
+                        b"tracker": {
+                            b"__pycache__": {
+                                b"test_add_torrent.cpython-314-pytest-9.1.1.pyc": {
+                                    b"": {
+                                        b"length": 170,
+                                        b"pieces root": b"\xa1\xbfGc\r\xad\xe6.\x10\x1d\x90sq2\xfa@Q\xa5\xa7\xc3\x80\xb9\xa7\x7f\xc6\xd7i\xee\xc4\x1d\xf1\xf8",
+                                    }
+                                }
+                            },
+                            b"test_add_torrent.py": {b"": {b"length": 0}},
+                        }
+                    },
+                    b"files": [
+                        {
+                            b"length": 170,
+                            b"path": [
+                                b"tracker",
+                                b"__pycache__",
+                                b"test_add_torrent.cpython-314-pytest-9.1.1.pyc",
+                            ],
+                        },
+                        {b"attr": b"p", b"length": 16214, b"path": [b".pad", b"16214"]},
+                        {b"length": 0, b"path": [b"tracker", b"test_add_torrent.py"]},
+                    ],
+                    b"meta version": 2,
+                    b"name": b"page_handlers",
+                    b"piece length": 16384,
+                    b"pieces": b"(7\xe6\\3Z\xa4\xe3L\x8f,\xe9j\xe2H\x91\x15\x05\xb1c",
+                },
+                b"piece layers": {},
+            }
+        )

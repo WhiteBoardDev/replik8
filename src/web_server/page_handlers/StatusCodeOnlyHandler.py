@@ -3,7 +3,6 @@ from typing import override
 
 
 class StatusCodeOnlyHandler(PageHandlerAbs):
-
     def __init__(self, statusCode: int):
         self.status = statusCode
 
@@ -14,4 +13,3 @@ class StatusCodeOnlyHandler(PageHandlerAbs):
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs):
         res.send_response(self.status)
         res.end_headers()
-        
