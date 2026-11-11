@@ -1,6 +1,12 @@
+{% extends "page_shell.html.jinja" %}
+
+{% block left_content %}
 <div class="card">
     <div class="card-content">
-        <form hx-encoding='multipart/form-data' hx-post='/add-torrent'>
+        <form hx-encoding='multipart/form-data'
+           hx-target="body" 
+           hx-swap="outerHTML" 
+           hx-post='/add-torrent'>
         {% if error %}
             <div class="alert alert-warning">
             <p>{{error}}</p>
@@ -17,8 +23,9 @@
                 <label for="description">Description</label>
                 <textarea class="form-control" id="description" name="description" rows=5 cols=33></textarea> 
 
-                <button>Upload</button>
+                <button class="btn btn-primary">Upload</button>
             </div>
         </form>
     </div>
 </div>
+{% endblock %}

@@ -1,3 +1,4 @@
+from tracker.InvalidUserInputError import InvalidUserInputError
 from tracker.datastore.connection import get_db
 from enum import Enum
 from sqlite_utils.db import Table, NotFoundError
@@ -16,6 +17,7 @@ class User:
     hashed_password: str
     password_salt: str
     role: str
+    created_by: str
 
 
 def _users_table() -> Table:
@@ -49,7 +51,16 @@ class UserRole(Enum):
     USER = "USER"
 
 
-def create_user(name: str, plaintext_password: str, role: UserRole):
+def create_user(
+    name: str, plaintext_password: str, role: UserRole, created_by: str
+) -> str | InvalidUserInputError:
+    """
+    Creates a new user account. returns the ID of the new user
+    """
+
+    if len(plaintext_password) < 12:
+        return InvalidUserInputError("Password must be at least 12 characters long")
+
     pw_parts = _hash_pass(plaintext_password)
     peer_key = _generate_secure_string(36)
     user = User(
@@ -59,11 +70,12 @@ def create_user(name: str, plaintext_password: str, role: UserRole):
         hashed_password=pw_parts[1],
         password_salt=pw_parts[0],
         role=role.name,
+        created_by=created_by,
     )
 
     table = _users_table()
     table.insert(asdict(user), pk="id")
-    return {"id": user.id}
+    return user.id
 
 
 def authenticate_user(name: str, password: str) -> str | None:
@@ -94,12 +106,39 @@ def authenticate_user_by_peer_key(peer_key: str) -> str | None:
 
 def root_user_check():
     table = _users_table()
+
+    # Table check
+    if not table.exists():
+        table.create(
+            {
+                "id": str,
+                "name": str,
+                "peer_key": str,
+                "hashed_password": str,
+                "password_salt": str,
+                "role": str,
+                "created_by": str,
+            },
+            not_null={
+                "name",
+                "peer_key",
+                "hashed_password",
+                "password_salt",
+                "role",
+                "created_by",
+            },
+            pk="id",
+        )
+
+        table.create_index(["name"], unique=True)
+        table.create_index(["peer_key"], unique=True)
+
     results = table.rows_where("role = 'ROOT'")
     number_of_existing = len([x for x in results])
     if number_of_existing > 1:
         raise Exception("Only 1 root user expected!")
     elif number_of_existing == 0:
-        create_user("root", "changeme", UserRole.ROOT)
+        create_user("root", "changeme", UserRole.ROOT, "")
 
 
 def get_user_from_key(plaintext_key: str) -> User | None:

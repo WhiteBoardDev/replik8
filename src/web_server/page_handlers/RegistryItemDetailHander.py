@@ -1,4 +1,4 @@
-from tracker.users import get_user_by_id
+from tracker.registry.user_management.users import get_user_by_id
 from tracker.peers import get_peer_stats, PeerStats
 import shared_utils.app_logging
 from tracker.InvalidUserInputError import InvalidUserInputError

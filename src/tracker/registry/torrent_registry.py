@@ -68,8 +68,6 @@ def add_new_item(
     """
     info_errors = _check_info_for_errors(torrent_file)
 
-    # TODO - generate NEW info, and info_hash. inject custom SOURCE key
-    # then save entire INFO bencoded into DB for easier downloads
     if info_errors is not None:
         return InvalidUserInputError(info_errors)
 

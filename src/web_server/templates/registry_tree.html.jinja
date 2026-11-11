@@ -1,3 +1,5 @@
+{% extends "page_shell.html.jinja" %}
+{% block left_content %}
 <style>
     li.closed-list-item::marker {
         content: "\1F4C1";
@@ -18,12 +20,11 @@
     }
 
 </style>
-
 <div id="registry-navigation-tree">
-    Registry tree Root
     <ul>
         {% for registry_tree_item in registry_tree['child_paths'] %}
         {% include 'registry_tree_item_collapsed.html.jinja' %}
         {% endfor %}
     </ul>
 </div>
+{% endblock %}

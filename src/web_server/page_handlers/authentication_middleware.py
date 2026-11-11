@@ -1,5 +1,5 @@
 from web_server.page_handlers.cookies import parse_cookie_header, set_cookie
-from tracker.users import authenticate_user
+from tracker.registry.user_management.users import authenticate_user
 from .PageHandlerAbs import ResponseFuncs
 import base64
 import uuid

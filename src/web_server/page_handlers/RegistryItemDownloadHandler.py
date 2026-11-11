@@ -1,5 +1,5 @@
 from tracker.registry.internal.torrent_download import bencode_torrent_for_user
-from tracker.users import get_user_by_id
+from tracker.registry.user_management.users import get_user_by_id
 import shared_utils.app_logging
 from tracker.InvalidUserInputError import InvalidUserInputError
 from typing import override

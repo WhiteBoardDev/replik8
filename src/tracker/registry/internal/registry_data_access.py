@@ -65,8 +65,10 @@ def _from_dict(
 
 def get_by_info_hash(info_hash: bytes) -> RegistryItem | InvalidUserInputError:
     table = _get_table()
-    results = table.rows_where("info_hash_v1 = ? OR info_hash_v2 = ?", [info_hash, info_hash])
-    for row in results: 
+    results = table.rows_where(
+        "info_hash_v1 = ? OR info_hash_v2 = ?", [info_hash, info_hash]
+    )
+    for row in results:
         return _from_dict(row, _get_registry_item_files(info_hash))
     return InvalidUserInputError("Registry item not found")
 
@@ -77,12 +79,12 @@ def insert_registry_item(registry_item: RegistryItem) -> InvalidUserInputError |
     table = _get_table()
     try:
         _insert_registry_item_files(registry_item.info_hash_v1, registry_item.files)
-        table.insert(record=item_dict, pk=["info_hash"])
+        table.insert(record=item_dict, pk=["info_hash_v1"])
     except IntegrityError as e:
         _logger.warning(e)
         return InvalidUserInputError("Attempted to add duplicate item!")
 
 
-def delete_registry_item(info_hash: bytes):
+def delete_registry_item(info_hash_v1: bytes):
     table = _get_table()
-    table.delete(pk_values=[info_hash])
+    table.delete(pk_values=[info_hash_v1])

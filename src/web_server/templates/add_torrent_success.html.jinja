@@ -1,1 +1,7 @@
-<div hx-get="{{right_col_target}}" hx-target="#right-col" hx-trigger="load"></div>
+{% extends "page_shell.html.jinja" %}
+
+{% block left_content %}
+<div hx-get="{{target}}" hx-trigger="load"></div>
+
+<a class="btn btn-primary" href="/add-torrent">Add another</a>
+{% endblock %}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redeem Invite</title>
+  {% for link in page_shell.link_includes %}
+  <link href="{{link.src}}" rel="stylesheet" integrity="{{link.integrity}}" />
+  {% endfor %}
+  {% for js_script in page_shell.script_includes %}
+  <script src="{{js_script.src}}" integrity="{{js_script.integrity}}"></script>
+  {% endfor %}
+</head>
+<body>
+<div class="container">
+
+{% if error_message is not none %}
+<div class="alert alert-warning">
+{{error_message}}
+</div>
+{% endif%}
+
+<form hx-target="body" hx-swap="outerHTML" hx-post="/redeem">
+  <input type="hidden" name="invite_id" value="{{invite_id}}"></input>
+  <div class="mb-3">
+    <label for="invite_secret" class="form-label">Invite Secret</label>
+    <input type="text" class="form-control" name="invite_secret" aria-describedby="invite_secret">
+  </div>
+  <div class="mb-3">
+    <label for="username" class="form-label">Username</label>
+    <input type="username" class="form-control" name="username">
+  </div>
+  <div class="mb-3">
+    <label for="password" class="form-label">Password</label>
+    <input type="password" class="form-control" name="password">
+  </div>
+  <div class="mb-3">
+    <label for="confirm_password" class="form-label">Confirm Password</label>
+    <input type="password" class="form-control" name="confirm_password">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+</div>
+</body>
+</html>

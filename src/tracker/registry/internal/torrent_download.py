@@ -1,6 +1,6 @@
 from tracker.TorrentFile import TorrentFile
 from tracker.bencoder import Bencoder, AcceptedBencoderTypes, parse_bencoded_message
-from tracker.users import get_user_by_id
+from tracker.registry.user_management.users import get_user_by_id
 from tracker.InvalidUserInputError import InvalidUserInputError
 
 from tracker.registry.RegistryItem import RegistryItem

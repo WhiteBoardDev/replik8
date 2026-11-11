@@ -62,8 +62,14 @@ class RequestAttrs:
     client_ip: str
     query_params: dict[str, list[str]]
     content_type: str | None
+    content_length: int | None
     rfile: BufferedIOBase
     full_path: str
+
+    def get_query_param(self, key: str) -> str | None:
+        if key in self.query_params and len(self.query_params[key]) == 1:
+            return self.query_params[key][0]
+        return None
 
 
 class PageHandlerAbs(ABC):

@@ -1,0 +1,30 @@
+
+
+<script>
+function copyToClipboard(id_to_copy) {
+  const copyText = document.getElementById(id_to_copy);
+  navigator.clipboard.writeText(copyText.innerHTML)
+}
+</script>
+
+<div class="card">
+    {% if invite_url is not none %}
+        <p>Share the following URL and secret with the person to invite. The invite expires in 3 days and can be used 1 time. Click to copy to clipboard.</p>
+
+        <h6>Invite URL</h6>
+        <button onclick="copyToClipboard('invite_url')" class="btn btn-light">&#128203; 
+            <pre id="invite_url">{{invite_url}}</pre>
+        </button>
+        
+        <h6>Invite secret</h6>
+         
+        <button onclick="copyToClipboard('invite_secret')" class="btn btn-light">&#128203;
+            <pre id="invite_secret">{{invite_secret}}</pre>
+        </button>
+
+    {% endif %}
+
+    {% if error_message is not none %}
+        <p>{{error_message}}</p>
+    {% endif %}
+</div>

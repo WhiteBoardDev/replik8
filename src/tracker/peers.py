@@ -37,26 +37,33 @@ class PeerDatabaseRecord:
     uploaded: int
     left: int
 
+
 def _table_check():
-   record = PeerDatabaseRecord(
+    record = PeerDatabaseRecord(
         ip="foo",
         user_id="example",
-        info_hash_v1=bytes([1,1]),
+        info_hash_v1=bytes([1, 1]),
         port=123,
         uploaded=100,
         downloaded=100,
         left=100,
-   ) 
+    )
 
-   table = _peers_table()
-   table.upsert(
+    table = _peers_table()
+    table.upsert(
         dataclasses.asdict(record),
         pk=(
             "info_hash_v1",
             "user_id",
         ),
     )
-   table.delete((bytes([1,1]), "example",))
+    table.delete(
+        (
+            bytes([1, 1]),
+            "example",
+        )
+    )
+
 
 def _peers_table() -> Table:
     return get_db().table("peers")
@@ -129,7 +136,6 @@ def upsert_peer(annouce_request: AnnounceRequest) -> InvalidUserInputError | Non
         ),
     )
     return None
-
 
 
 _table_check()

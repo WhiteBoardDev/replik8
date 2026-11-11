@@ -1,6 +1,6 @@
 from tracker.InvalidUserInputError import InvalidUserInputError
 from web_server.page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
-from tracker.users import authenticate_user_by_peer_key
+from tracker.registry.user_management.users import authenticate_user_by_peer_key
 from tracker.annouce_response import response_to_annouce
 from .PageHandlerAbs import (
     PageHandlerAbs,

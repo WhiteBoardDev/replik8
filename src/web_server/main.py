@@ -1,3 +1,6 @@
+from web_server.page_handlers.RedeemInviteHandler import RedeemInviteHandler
+from web_server.page_handlers.SignOutHandler import SignOutHandler
+from web_server.page_handlers.UserManagementHandler import UserManagementHandler
 from web_server.page_handlers.RegistryItemDownloadHandler import (
     RegistryItemDownloadHandler,
 )
@@ -5,7 +8,7 @@ from .page_handlers.RegistryItemDetailHander import RegistryItemDetailHandler
 from .page_handlers.RegistryTreeItemExpanded import RegistryTreeItemExpanded
 from .page_handlers.RegistryTreeItemCollapsed import RegistryTreeItemCollapsed
 from .page_handlers.AssetsHandler import AssetsHandler
-from tracker.users import root_user_check
+from tracker.registry.user_management.users import root_user_check
 from .page_handlers.StatusCodeOnlyHandler import StatusCodeOnlyHandler
 from .page_handlers.IndexHandler import IndexHandler
 from .page_handlers.PageHandlerAbs import (
@@ -39,21 +42,29 @@ arg_parser = argparse.ArgumentParser(prog="torrenttracker")
 
 arg_parser.add_argument("--disable_https", default=False)
 arg_parser.add_argument("--server_port", default=8080)
-arg_parser.add_argument("--announce_url")
+arg_parser.add_argument("--announce_url", required=True)
+arg_parser.add_argument("--website_base_url", required=True)
 
 
 args = arg_parser.parse_args()
 
+assert isinstance(args.website_base_url, str)
+
 _tracker_handler = BitTorrentTrackerHandler()
+_redeem_invite_handler = RedeemInviteHandler()
+_assets_handler = AssetsHandler()
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
     AddTorrentHandler(),
-    AssetsHandler(),
     RegistryTreeItemCollapsed(),
     RegistryTreeItemExpanded(),
     RegistryItemDetailHandler(),
     RegistryItemDownloadHandler(announce_url=args.announce_url),
+    UserManagementHandler(args.website_base_url),
+    SignOutHandler(),
+    _redeem_invite_handler,
     _tracker_handler,
+    _assets_handler,
 ]
 
 not_found_handler = StatusCodeOnlyHandler(404)
@@ -69,8 +80,16 @@ _starting_with_route_paths = [
     if handler.get_routing_config().match_type.name == MatchType.STARTS_WITH.name
 ]
 
-_unauthenticated_routes = set([])
-
+_unauthenticated_paths = set(
+    ["/favicon.ico", _redeem_invite_handler.get_routing_config().path]
+)
+_unauthenticated_path_prefix = set(
+    [
+        _assets_handler.get_routing_config().path,
+        _tracker_handler.get_routing_config().path,
+        "/.well-known",
+    ]
+)
 root_user_check()
 
 
@@ -91,8 +110,17 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
         authenticated_user_id = None
         # Run all middleware
-        if not self._get_path_only().startswith(
-            _tracker_handler.get_routing_config().path
+
+        if (
+            len(
+                [
+                    x
+                    for x in _unauthenticated_path_prefix
+                    if self._get_path_only().startswith(x)
+                ]
+            )
+            == 0
+            and self._get_path_only() not in _unauthenticated_paths
         ):
             authenticated_user_id = authentication_middleware.handle(
                 authentication_header=self.headers.get("Authorization"),
@@ -115,12 +143,16 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 ):
                     handler = possible_handler
                     break
+        possible_content_length = self.headers.get("Content-Length")
+        if possible_content_length is not None:
+            possible_content_length = int(possible_content_length)
 
         reqAttrs = RequestAttrs(
             authenticated_user_id=authenticated_user_id,
             client_ip=self.client_address[0],
             query_params=self._get_query_params(),
             content_type=self.headers.get("Content-Type"),
+            content_length=possible_content_length,
             rfile=self.rfile,
             full_path=self._get_path_only(),
         )

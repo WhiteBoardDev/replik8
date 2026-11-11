@@ -1,5 +1,5 @@
 from tracker.registry.registry_navigation import get_navigation_at_path
-from web_assets import css_assets, js_assets
+from web_server.page_handlers.common_ui_models.page_shell import page_shell_model
 from web_server.templates import template_render
 from web_server.page_handlers.PageHandlerAbs import (
     PageHandlerAbs,
@@ -9,21 +9,6 @@ from web_server.page_handlers.PageHandlerAbs import (
     ResponseFuncs,
 )
 from typing import override
-
-
-def page_shell_model():
-    return {
-        "link_includes": [
-            {"src": x.local_destination(), "integrity": x.integrity_hash}
-            for x in css_assets
-        ],
-        "script_includes": [
-            {"src": x.local_destination(), "integrity": x.integrity_hash}
-            for x in js_assets
-        ],
-        "site_name": "Replik8",
-        "view": "registry_tree.html.jinja",
-    }
 
 
 class IndexHandler(PageHandlerAbs):
@@ -39,9 +24,9 @@ class IndexHandler(PageHandlerAbs):
         root_item = get_navigation_at_path("/")
         res.wfile.write(
             template_render.render(
-                "page_shell.html.jinja",
+                "registry_tree.html.jinja",
                 {
-                    "page_shell": page_shell_model(),
+                    "page_shell": page_shell_model(req),
                     "registry_tree": root_item.as_dict(),
                 },
             )
