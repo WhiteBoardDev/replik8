@@ -31,7 +31,7 @@ def _add_key_if_present(key: bytes, src: dict, dest: dict):
         dest[key.decode()] = src[key]
 
 
-def _copy_and_customize_info_dict(info_dict_original: dict) -> dict:
+def _copy_and_customize_info_dict(info_dict_original: dict, server_id: str) -> dict:
     """
     Ensures the file is globally unique by adding a random value to the info dict.
     Only copies specific values from the original info hash to avoid extra fluff and
@@ -40,7 +40,7 @@ def _copy_and_customize_info_dict(info_dict_original: dict) -> dict:
 
     updated_info_dict = {
         "private": 1,
-        "nonce": random.randint(1, 1000000),
+        "sid": server_id,
         "name": info_dict_original[b"name"],
         "piece length": info_dict_original[b"piece length"],
         "pieces": info_dict_original[b"pieces"],
@@ -53,15 +53,15 @@ def _copy_and_customize_info_dict(info_dict_original: dict) -> dict:
     return updated_info_dict
 
 
-def _copy_and_customize_torrent(original: TorrentFile) -> TorrentFile:
-    updated_info = _copy_and_customize_info_dict(original.get_info())
+def _copy_and_customize_torrent(original: TorrentFile, server_id: str) -> TorrentFile:
+    updated_info = _copy_and_customize_info_dict(original.get_info(), server_id)
     updated_torrent_bytes = Bencoder().withDict({"info": updated_info}).asBytes()
     updated_torrent = TorrentFile(original.file_name, updated_torrent_bytes)
     return updated_torrent
 
 
 def add_new_item(
-    torrent_file: TorrentFile, user_id: str, description: str, path: str
+    torrent_file: TorrentFile, user_id: str, description: str, path: str, server_id: str
 ) -> InvalidUserInputError | bytes:
     """
     Adds a new file to the registry. returns info_hash of newly item added
@@ -71,7 +71,7 @@ def add_new_item(
     if info_errors is not None:
         return InvalidUserInputError(info_errors)
 
-    updated_torrent = _copy_and_customize_torrent(torrent_file)
+    updated_torrent = _copy_and_customize_torrent(torrent_file, server_id)
     _validate_path(path)
     info_hash_v1 = updated_torrent.compute_info_hash_v1()
 

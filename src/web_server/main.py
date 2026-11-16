@@ -44,6 +44,7 @@ arg_parser.add_argument("--disable_https", default=False)
 arg_parser.add_argument("--server_port", default=8080)
 arg_parser.add_argument("--announce_url", required=True)
 arg_parser.add_argument("--website_base_url", required=True)
+arg_parser.add_argument("--server_id", required=True, help="Unique ID for this tracker server, will be stamped on every generated torrent")
 
 
 args = arg_parser.parse_args()
@@ -55,7 +56,7 @@ _redeem_invite_handler = RedeemInviteHandler()
 _assets_handler = AssetsHandler()
 _all_route_handlers: list[PageHandlerAbs] = [
     IndexHandler(),
-    AddTorrentHandler(),
+    AddTorrentHandler(args.server_id),
     RegistryTreeItemCollapsed(),
     RegistryTreeItemExpanded(),
     RegistryItemDetailHandler(),

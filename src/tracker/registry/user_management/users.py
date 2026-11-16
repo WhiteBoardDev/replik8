@@ -1,3 +1,5 @@
+import random
+from shared_utils.app_logging import get_logger
 from tracker.InvalidUserInputError import InvalidUserInputError
 from tracker.datastore.connection import get_db
 from enum import Enum
@@ -8,6 +10,7 @@ import string
 import bcrypt
 from dataclasses import dataclass, asdict
 
+_logger = get_logger("users")
 
 @dataclass
 class User:
@@ -83,7 +86,7 @@ def authenticate_user(name: str, password: str) -> str | None:
     Authenticates a user given their plaintext password. If incorrect, returns none.
     If correct, returns their user ID
     """
-    table = _users_table()
+    table: Table = _users_table()
     possible_users = table.rows_where("name=?", [name])
     for user in possible_users:
         hashed_pass = _hash_pass_with_salt(password, user["password_salt"])
@@ -103,6 +106,10 @@ def authenticate_user_by_peer_key(peer_key: str) -> str | None:
         return user["id"]
     return None
 
+def _generate_secure_password():
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(secrets.choice(alphabet) for _ in range(14))
+    return password
 
 def root_user_check():
     table = _users_table()
@@ -133,12 +140,21 @@ def root_user_check():
         table.create_index(["name"], unique=True)
         table.create_index(["peer_key"], unique=True)
 
-    results = table.rows_where("role = 'ROOT'")
+    results = table.rows_where("name = 'root'")
     number_of_existing = len([x for x in results])
     if number_of_existing > 1:
         raise Exception("Only 1 root user expected!")
     elif number_of_existing == 0:
-        create_user("root", "changeme", UserRole.ROOT, "")
+        _logger.info("Inserting root user")
+        password = _generate_secure_password()
+        result = create_user(name="root",
+                             plaintext_password=password,
+                             role=UserRole.ROOT, 
+                             created_by="")
+        assert isinstance(result, str)
+        _logger.info(f"Root user generated with password: {password} change this on next login")
+    else:
+        _logger.info("root user check passed")
 
 
 def get_user_from_key(plaintext_key: str) -> User | None:

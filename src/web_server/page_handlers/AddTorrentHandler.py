@@ -21,6 +21,11 @@ _content_disposition = "Content-Disposition"
 
 
 class AddTorrentHandler(PageHandlerAbs):
+
+    def __init__(self, server_id: str) -> None:
+        super().__init__()
+        self.server_id = server_id
+    
     @override
     def get_routing_config(self):
         return RoutingConfig("/add-torrent", match_type=MatchType.EXACT)
@@ -107,6 +112,7 @@ class AddTorrentHandler(PageHandlerAbs):
                 user_id=req.authenticated_user_id,
                 description=get_field_value_as_str("description", form_data) or "",
                 path=boundary_with_registry_path.file_content.strip().decode(),
+                server_id=self.server_id
             )
             if isinstance(info_hash, InvalidUserInputError):
                 self._send_add_torrent_page(req, res, info_hash.message)
