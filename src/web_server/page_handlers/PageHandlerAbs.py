@@ -83,5 +83,8 @@ class PageHandlerAbs(ABC):
     def handle_post(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()
 
+    def handle_put(self, req: RequestAttrs, res: ResponseFuncs) -> None:
+        raise NotImplementedError()
+
     def handle_delete(self, req: RequestAttrs, res: ResponseFuncs) -> None:
         raise NotImplementedError()

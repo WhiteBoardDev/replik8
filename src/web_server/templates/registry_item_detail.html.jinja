@@ -25,9 +25,8 @@
                 <div class="col d-flex align-items-center">
                     <button type="button" class="btn btn-warning" 
                     hx-target="#right-col" 
-                    hx-confirm="Are you sure you wish to delete this file?"
-                    hx-delete="{{registry_item_detail.delete_url}}"
-                    >Delete</button>
+                    hx-get="{{registry_item_detail.edit_url}}"
+                    >Edit</button>
                 </div>
             </div>
             <div class="row">

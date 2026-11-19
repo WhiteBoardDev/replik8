@@ -1,19 +1,25 @@
+from typing import Sequence
 from tracker.bencoder import Bencoder
 from tracker.InvalidUserInputError import InvalidUserInputError
+from tracker.registry.validation import FieldValidatorBuilder
 from .internal.registry_data_access import *
 from .RegistryItem import RegistryItem
 from tracker.registry.registry_navigation import refresh_nagivation_tree
 from tracker.TorrentFile import TorrentFile
 from shared_utils import app_logging
 import re
-import random
 
 _logger = app_logging.get_logger("torrent_registry")
 
 
-def _validate_path(path: str):
-    assert re.match(r"^/[a-zA-Z\/ ]*$", path), "Path must contain only alpha characters"
+_path_validator = FieldValidatorBuilder("path").matches_regex(r"^/(?:[a-zA-Z]+/?[a-zA-Z]+)*$", "Path must only contain alpha characters").build()
+_name_validator = FieldValidatorBuilder("name").length(1, 100).build()
+_description_validator = FieldValidatorBuilder("description").length(1, 50).build()
 
+def _reduce_errors(possible_errors: Sequence[None | InvalidUserInputError]) -> None | InvalidUserInputError:
+    possible = [x for x in possible_errors if isinstance(x, InvalidUserInputError)]
+    if len(possible) > 0:
+        return possible[0]
 
 def _check_info_for_errors(torrent_file: TorrentFile) -> str | None:
     """
@@ -59,6 +65,17 @@ def _copy_and_customize_torrent(original: TorrentFile, server_id: str) -> Torren
     updated_torrent = TorrentFile(original.file_name, updated_torrent_bytes)
     return updated_torrent
 
+def update_existing_item(info_hash_v1: bytes, name: str, description: str, path: str) -> None | InvalidUserInputError:
+    validation_error = _reduce_errors([
+        _path_validator(path),
+        _name_validator(name),
+        _description_validator(description)])
+    if validation_error is not None:
+        return validation_error
+
+    update_values(info_hash_v1, name, description, path)
+    refresh_nagivation_tree()
+
 
 def add_new_item(
     torrent_file: TorrentFile, user_id: str, description: str, path: str, server_id: str
@@ -72,7 +89,13 @@ def add_new_item(
         return InvalidUserInputError(info_errors)
 
     updated_torrent = _copy_and_customize_torrent(torrent_file, server_id)
-    _validate_path(path)
+    validation_error = _reduce_errors([
+        _path_validator(path),
+        _name_validator(torrent_file.file_name),
+        _description_validator(description)])
+    if validation_error is not None:
+        return validation_error
+        
     info_hash_v1 = updated_torrent.compute_info_hash_v1()
 
     registry_item = RegistryItem(

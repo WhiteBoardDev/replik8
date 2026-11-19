@@ -84,6 +84,13 @@ def insert_registry_item(registry_item: RegistryItem) -> InvalidUserInputError |
         _logger.warning(e)
         return InvalidUserInputError("Attempted to add duplicate item!")
 
+def update_values(info_hash_v1: bytes, name: str, description: str, path: str):
+    table = _get_table()
+    table.update([info_hash_v1], {
+        "name": name,
+        "description": description,
+        "path": path
+    })
 
 def delete_registry_item(info_hash_v1: bytes):
     table = _get_table()

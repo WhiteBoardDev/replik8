@@ -24,7 +24,7 @@ from .page_handlers.AddTorrentHandler import AddTorrentHandler
 import argparse
 import ssl
 from urllib.parse import urlparse, parse_qs
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import HTTPServer, BaseHTTPRequestHandler, ThreadingHTTPServer
 import debugpy
 import time
 
@@ -104,6 +104,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_DELETE(self):
         self._do_verb("DELETE")
 
+    def do_PUT(self):
+        self._do_verb("PUT")
+
     def _do_verb(self, verb: str):
         responseFuncs = ResponseFuncs(
             self.send_response, self.send_header, self.end_headers, self.wfile
@@ -164,6 +167,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
                 handler.handle_get(reqAttrs, responseFuncs)
             elif verb == "POST":
                 handler.handle_post(reqAttrs, responseFuncs)
+            elif verb == "PUT":
+                handler.handle_put(reqAttrs, responseFuncs)
             elif verb == "DELETE":
                 handler.handle_delete(reqAttrs, responseFuncs)
             else:
@@ -180,7 +185,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 
 server_address_bind = ("localhost", args.server_port)
-with HTTPServer(server_address_bind, SimpleHTTPRequestHandler) as httpd:
+with ThreadingHTTPServer(server_address_bind, SimpleHTTPRequestHandler) as httpd:
     if not args.disable_https:
         _logger.info("Running with HTTPS")
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

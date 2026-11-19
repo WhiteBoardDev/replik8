@@ -1,0 +1,69 @@
+<div class="card" id="edit-item-card">
+    <div class="card-body">
+
+        <form hx-encoding='multipart/form-data'
+        hx-target="#edit-item-card"
+        hx-swap="outerHTML"
+        hx-put="/registry-item-detail">
+
+            {% if edit_error_msg %}
+                <div class="alert alert-warning">
+                <p>{{edit_error_msg}}</p>
+                <p>Please try again.</p>
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <input type="hidden" value="{{registry_item_detail.info_hash_hex}}" name="id"/>
+
+                <label for="registry-path">Name</label>
+                <input class="form-control" value="{{registry_item_detail.name}}" id="name" type="text" name="name"></input>
+
+                <label for="registry-path">Path to place in registry</label>
+                <input class="form-control" value="{{registry_item_detail.path_location_raw}}" id="registry-path" type="text" name="registry-path"></input>
+
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" name="description" rows=5 cols=33>{{registry_item_detail.description}}</textarea> 
+
+                <button class="btn btn-primary">Save</button>
+            </div>
+        </form>
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                {% for nav_path in registry_item_detail.path_location %}
+                <li class="breadcrumb-item active" aria-current="page">{{nav_path}}</li>
+                {% endfor %}
+            </ol>
+        </nav>
+        <div class="alert alert-primary" role="alert">
+            <h2>{{registry_item_detail.name}}</h2>
+        </div>
+        <div class="content">
+            <div class="row">
+                <div class="col">
+                    <ul style="list-style-type: none;">
+                    <li><span class="badge bg-secondary">Owner: {{registry_item_detail.user_name}}</span></li>
+                    <li><span class="badge bg-success">{{registry_item_detail.seeder_count}} Seeders</span></li>
+                    <li><span class="badge bg-warning">{{registry_item_detail.leecher_count}} Leechers</span></li>
+                    </ul>
+                </div>
+                <div class="col d-flex align-items-center">
+                    <a href="{{registry_item_detail.download_url}}">Download</a>
+                </div>
+                <div class="col d-flex align-items-center">
+                    <button type="button" class="btn btn-warning" 
+                    hx-target="#right-col" 
+                    hx-confirm="Are you sure you wish to delete this file?"
+                    hx-delete="{{registry_item_detail.delete_url}}"
+                    >Delete</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <p>{{registry_item_detail.description}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -9,6 +9,8 @@ import secrets
 import string
 import bcrypt
 
+from .users import get_user_by_id
+
 _max_invalid_secret_attempts = 5
 
 
@@ -17,12 +19,16 @@ def _get_table() -> Table:
 
 
 def _user_allowed_to_create_invite(user_id: str) -> None | InvalidUserInputError:
-    # TODO assert that the caller has appropriate permission to do so
-    return None
+    user = get_user_by_id(user_id)
+    if user is None:
+        return InvalidUserInputError("Input user not found! Cannot create invite")
+    if user.role != "ADMIN" or user.role != "ROOT":
+        return InvalidUserInputError("Cannot create invite. Only Admins can")
+
 
 
 def _expire_stale_records():
-    # TODO
+    # TODO look at records past their redeem date and purge them
     return None
 
 

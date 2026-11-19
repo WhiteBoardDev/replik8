@@ -83,8 +83,7 @@ def get_field_value_as_str(
     boundary = find_boundary_with_form_input(field_name, boundaries)
     if boundary is None:
         return None
-    return boundary.file_content.decode()
-
+    return boundary.file_content.decode().removesuffix("\r\n")
 
 def parse_form_data(req: RequestAttrs) -> list[BoundaryData]:
     assert (
