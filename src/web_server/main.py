@@ -200,7 +200,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         return self.path.split("?")[0]
 
 
-server_address_bind = (args.bind_address, args.server_port)
+server_address_bind = (args.bind_address, int(args.server_port))
 
 assert isinstance(server_address_bind[0], str) and len(server_address_bind[0]) > 0, (
     "Bind address not properly set"
