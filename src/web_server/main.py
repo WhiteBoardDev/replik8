@@ -29,11 +29,6 @@ import debugpy
 import time
 
 _logger = get_logger("root")
-try:
-    # Assumes the
-    debugpy.connect(("127.0.0.1", 5678))
-except Exception:
-    _logger.warning("cannot connect to debugger")
 
 
 _logger.info("Starting app")
@@ -45,9 +40,18 @@ arg_parser.add_argument("--server_port", default=8080)
 arg_parser.add_argument("--announce_url", required=True)
 arg_parser.add_argument("--website_base_url", required=True)
 arg_parser.add_argument("--server_id", required=True, help="Unique ID for this tracker server, will be stamped on every generated torrent")
-
-
+arg_parser.add_argument("--debug", default=False)
+arg_parser.add_argument("--https_public_chain", default="certs/public_chain.pem")
+arg_parser.add_argument("--https_private_key", default="certs/private_key.pem")
+arg_parser.add_argument("--bind_address", default="localhost")
 args = arg_parser.parse_args()
+
+if args.debug:
+    try:
+        # Assumes the
+        debugpy.connect(("127.0.0.1", 5678))
+    except Exception:
+        _logger.warning("cannot connect to debugger")
 
 assert isinstance(args.website_base_url, str)
 
@@ -184,12 +188,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         return self.path.split("?")[0]
 
 
-server_address_bind = ("localhost", args.server_port)
+server_address_bind = (args.bind_address, args.server_port)
+
 with ThreadingHTTPServer(server_address_bind, SimpleHTTPRequestHandler) as httpd:
-    if not args.disable_https:
+    if args.disable_https == False:
         _logger.info("Running with HTTPS")
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-        context.load_cert_chain(".certs/cert.pem", ".certs/key.pem")
+        context.load_cert_chain(args.https_public_chain, args.https_private_key)
         httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
     else:
         _logger.info("Running on HTTP plaintext")
