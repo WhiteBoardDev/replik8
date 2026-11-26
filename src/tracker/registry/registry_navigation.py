@@ -1,3 +1,4 @@
+import glob
 from .internal.registry_data_access import get_by_path
 from dataclasses import dataclass
 from tracker.datastore.connection import get_db
@@ -120,9 +121,13 @@ def _build_nav_tree(paths: set[str]) -> NavigationTreeNode:
                 current_node = current_node[path_parth]
     return root
 
+_registry_paths = None
+_nav_tree_root = None
 
-_registry_paths = _build_path_set()
-_nav_tree_root = _build_nav_tree(_registry_paths)
+def initialize_registry_navigation():
+    global _registry_paths, _nav_tree_root
+    _registry_paths = _build_path_set()
+    _nav_tree_root = _build_nav_tree(_registry_paths)
 
 
 def refresh_nagivation_tree():
@@ -144,6 +149,7 @@ def _get_nav_children_of(path: str) -> list[str]:
 
     path_parts = path.split("/")
     current_node = _nav_tree_root
+    assert current_node is not None, "Nav tree root not initialized"
     for part in path_parts:
         if len(part) > 0:
             if part in current_node:

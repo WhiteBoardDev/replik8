@@ -138,4 +138,5 @@ def upsert_peer(annouce_request: AnnounceRequest) -> InvalidUserInputError | Non
     return None
 
 
-_table_check()
+def initilize_peers():
+    _table_check()

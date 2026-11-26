@@ -1,4 +1,6 @@
+from tracker.peers import initilize_peers
 from tracker.datastore.connection import set_db_location
+from tracker.registry.registry_navigation import initialize_registry_navigation
 from web_server.page_handlers.RedeemInviteHandler import RedeemInviteHandler
 from web_server.page_handlers.SignOutHandler import SignOutHandler
 from web_server.page_handlers.UserManagementHandler import UserManagementHandler
@@ -100,7 +102,8 @@ _unauthenticated_path_prefix = set(
     ]
 )
 root_user_check()
-
+initialize_registry_navigation()
+initilize_peers()
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
