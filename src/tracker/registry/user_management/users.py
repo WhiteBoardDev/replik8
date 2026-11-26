@@ -27,7 +27,7 @@ class User:
 
 
 _user_name_validator = FieldValidatorBuilder("username").length(1, 25).matches_regex("^[a-zA-Z0-9]+$", "Lower case letters, upper case letters, and numbers only").build()
-_password_validator = FieldValidatorBuilder("password").length(12, 30).build()
+_password_validator = FieldValidatorBuilder("password").length(12, 30).matches_regex("^[a-zA-Z0-9!@#$%^&*]+$","Passwords may contain only a-z, numbers, and symbols !@#$%^&*").build()
 
 def _users_table() -> Table:
     return get_db().table("users")
@@ -119,8 +119,8 @@ def authenticate_user_by_peer_key(peer_key: str) -> str | None:
 
 
 def _generate_secure_password():
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    password = "".join(secrets.choice(alphabet) for _ in range(14))
+    alphabet = string.ascii_letters + string.digits
+    password = "".join(secrets.choice(alphabet) for _ in range(18))
     return password
 
 
