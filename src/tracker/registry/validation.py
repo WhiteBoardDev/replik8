@@ -1,7 +1,8 @@
+from ast import In
 import re
 
 from tracker.InvalidUserInputError import InvalidUserInputError
-from typing import Callable
+from typing import Callable, Iterable
 
 
 class FieldValidatorBuilder:
@@ -33,12 +34,19 @@ class FieldValidatorBuilder:
         self.validation_chain.append(_matches)
         return self
 
-    def build(self):
+    def build(self) -> Callable[[str], None | InvalidUserInputError]:
 
-        def validator(value) -> None | InvalidUserInputError:
+        def validator(value: str) -> None | InvalidUserInputError:
             for validator in self.validation_chain:
                 possible_invalid = validator(value)
                 if possible_invalid is not None:
                     return possible_invalid
 
         return validator
+
+
+def validate_chain(outcomes: Iterable[None | InvalidUserInputError]) -> None | InvalidUserInputError:
+    possible_error = [x for x in outcomes if isinstance(x, InvalidUserInputError)]
+    if len(possible_error) > 0:
+        return possible_error[0]
+    return None

@@ -1,4 +1,4 @@
-import random
+import re
 from shared_utils.app_logging import get_logger
 from tracker.InvalidUserInputError import InvalidUserInputError
 from tracker.datastore.connection import get_db
@@ -9,6 +9,8 @@ import secrets
 import string
 import bcrypt
 from dataclasses import dataclass, asdict
+
+from tracker.registry.validation import FieldValidatorBuilder, validate_chain
 
 _logger = get_logger("users")
 
@@ -23,6 +25,9 @@ class User:
     role: str
     created_by: str
 
+
+_user_name_validator = FieldValidatorBuilder("username").length(1, 25).matches_regex("^[a-zA-Z0-9]+$", "Lower case letters, upper case letters, and numbers only").build()
+_password_validator = FieldValidatorBuilder("password").length(12, 30).build()
 
 def _users_table() -> Table:
     return get_db().table("users")
@@ -62,9 +67,14 @@ def create_user(
     Creates a new user account. returns the ID of the new user
     """
 
-    if len(plaintext_password) < 12:
-        return InvalidUserInputError("Password must be at least 12 characters long")
+    possible_validation_error = validate_chain((
+        _user_name_validator(name),
+        _password_validator(plaintext_password)
+    ))
 
+    if possible_validation_error is not None:
+        return possible_validation_error
+    
     pw_parts = _hash_pass(plaintext_password)
     peer_key = _generate_secure_string(36)
     user = User(

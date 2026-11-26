@@ -32,17 +32,17 @@ def handle(
     if authentication_header is not None and authentication_header.startswith(_basic):
         prefix_removed = authentication_header.removeprefix(_basic)
         decoded = base64.b64decode(prefix_removed).decode("utf-8")
-        parts = decoded.split(":")
-        assert len(parts) == 2
-        user = parts[0]
-        password = parts[1]
-        user_id = authenticate_user(user, password)
-        if user_id is not None:
-            # Success!
-            session_key = uuid.uuid4().hex
-            set_cookie(res, _session_cookie_name, session_key)
-            _session_store[session_key] = user_id
-            return user_id
+        split_on = decoded.index(":")
+        if split_on > 0:
+            user = decoded[:split_on]
+            password = decoded[split_on+1:]
+            user_id = authenticate_user(user, password)
+            if user_id is not None:
+                # Success!
+                session_key = uuid.uuid4().hex
+                set_cookie(res, _session_cookie_name, session_key)
+                _session_store[session_key] = user_id
+                return user_id
     _send_unauth(res)
     return None
 
