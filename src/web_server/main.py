@@ -1,3 +1,4 @@
+from tracker.datastore.connection import set_db_location
 from web_server.page_handlers.RedeemInviteHandler import RedeemInviteHandler
 from web_server.page_handlers.SignOutHandler import SignOutHandler
 from web_server.page_handlers.UserManagementHandler import UserManagementHandler
@@ -44,6 +45,7 @@ arg_parser.add_argument("--debug", default=False)
 arg_parser.add_argument("--https_public_chain", default="certs/public_chain.pem")
 arg_parser.add_argument("--https_private_key", default="certs/private_key.pem")
 arg_parser.add_argument("--bind_address", default="localhost")
+arg_parser.add_argument("--database_file", default="db/replik8.db")
 args = arg_parser.parse_args()
 
 if args.debug:
@@ -54,6 +56,8 @@ if args.debug:
         _logger.warning("cannot connect to debugger")
 
 assert isinstance(args.website_base_url, str)
+
+set_db_location(args.database_file)
 
 _tracker_handler = BitTorrentTrackerHandler()
 _redeem_invite_handler = RedeemInviteHandler()
