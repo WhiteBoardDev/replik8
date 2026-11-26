@@ -121,8 +121,10 @@ def _build_nav_tree(paths: set[str]) -> NavigationTreeNode:
                 current_node = current_node[path_parth]
     return root
 
+
 _registry_paths = None
 _nav_tree_root = None
+
 
 def initialize_registry_navigation():
     global _registry_paths, _nav_tree_root

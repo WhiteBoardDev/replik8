@@ -12,6 +12,7 @@ from dataclasses import dataclass, asdict
 
 _logger = get_logger("users")
 
+
 @dataclass
 class User:
     id: str
@@ -106,10 +107,12 @@ def authenticate_user_by_peer_key(peer_key: str) -> str | None:
         return user["id"]
     return None
 
+
 def _generate_secure_password():
     alphabet = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(secrets.choice(alphabet) for _ in range(14))
+    password = "".join(secrets.choice(alphabet) for _ in range(14))
     return password
+
 
 def root_user_check():
     table = _users_table()
@@ -147,12 +150,13 @@ def root_user_check():
     elif number_of_existing == 0:
         _logger.info("Inserting root user")
         password = _generate_secure_password()
-        result = create_user(name="root",
-                             plaintext_password=password,
-                             role=UserRole.ROOT, 
-                             created_by="")
+        result = create_user(
+            name="root", plaintext_password=password, role=UserRole.ROOT, created_by=""
+        )
         assert isinstance(result, str)
-        _logger.info(f"Root user generated with password: {password} change this on next login")
+        _logger.info(
+            f"Root user generated with password: {password} change this on next login"
+        )
     else:
         _logger.info("root user check passed")
 

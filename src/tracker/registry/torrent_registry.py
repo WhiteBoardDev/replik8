@@ -12,14 +12,24 @@ import re
 _logger = app_logging.get_logger("torrent_registry")
 
 
-_path_validator = FieldValidatorBuilder("path").matches_regex(r"^/(?:[a-zA-Z]+/?[a-zA-Z]+)*$", "Path must only contain alpha characters").build()
+_path_validator = (
+    FieldValidatorBuilder("path")
+    .matches_regex(
+        r"^/(?:[a-zA-Z]+/?[a-zA-Z]+)*$", "Path must only contain alpha characters"
+    )
+    .build()
+)
 _name_validator = FieldValidatorBuilder("name").length(1, 100).build()
 _description_validator = FieldValidatorBuilder("description").length(1, 50).build()
 
-def _reduce_errors(possible_errors: Sequence[None | InvalidUserInputError]) -> None | InvalidUserInputError:
+
+def _reduce_errors(
+    possible_errors: Sequence[None | InvalidUserInputError],
+) -> None | InvalidUserInputError:
     possible = [x for x in possible_errors if isinstance(x, InvalidUserInputError)]
     if len(possible) > 0:
         return possible[0]
+
 
 def _check_info_for_errors(torrent_file: TorrentFile) -> str | None:
     """
@@ -65,11 +75,17 @@ def _copy_and_customize_torrent(original: TorrentFile, server_id: str) -> Torren
     updated_torrent = TorrentFile(original.file_name, updated_torrent_bytes)
     return updated_torrent
 
-def update_existing_item(info_hash_v1: bytes, name: str, description: str, path: str) -> None | InvalidUserInputError:
-    validation_error = _reduce_errors([
-        _path_validator(path),
-        _name_validator(name),
-        _description_validator(description)])
+
+def update_existing_item(
+    info_hash_v1: bytes, name: str, description: str, path: str
+) -> None | InvalidUserInputError:
+    validation_error = _reduce_errors(
+        [
+            _path_validator(path),
+            _name_validator(name),
+            _description_validator(description),
+        ]
+    )
     if validation_error is not None:
         return validation_error
 
@@ -89,13 +105,16 @@ def add_new_item(
         return InvalidUserInputError(info_errors)
 
     updated_torrent = _copy_and_customize_torrent(torrent_file, server_id)
-    validation_error = _reduce_errors([
-        _path_validator(path),
-        _name_validator(torrent_file.file_name),
-        _description_validator(description)])
+    validation_error = _reduce_errors(
+        [
+            _path_validator(path),
+            _name_validator(torrent_file.file_name),
+            _description_validator(description),
+        ]
+    )
     if validation_error is not None:
         return validation_error
-        
+
     info_hash_v1 = updated_torrent.compute_info_hash_v1()
 
     registry_item = RegistryItem(

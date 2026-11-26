@@ -85,6 +85,7 @@ def get_field_value_as_str(
         return None
     return boundary.file_content.decode().removesuffix("\r\n")
 
+
 def parse_form_data(req: RequestAttrs) -> list[BoundaryData]:
     assert (
         req.content_type is not None

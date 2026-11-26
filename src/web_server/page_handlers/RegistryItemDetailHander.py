@@ -41,17 +41,19 @@ class RegistryItemDetailHandler(PageHandlerAbs):
 
         form_fields = ["id", "name", "registry-path", "description"]
         form_values = {
-            x: get_field_value_as_str(x, form_data) or ""
-            for x in form_fields
-        }        
+            x: get_field_value_as_str(x, form_data) or "" for x in form_fields
+        }
         info_hash_v1 = bytes.fromhex(form_values["id"])
-        possible_error = reg.update_existing_item(info_hash_v1, form_values["name"], form_values["description"], form_values["registry-path"])
+        possible_error = reg.update_existing_item(
+            info_hash_v1,
+            form_values["name"],
+            form_values["description"],
+            form_values["registry-path"],
+        )
         if possible_error is not None:
             possible_error = possible_error.message
-            
-        self._render_info(info_hash_v1, form_values["id"], req, res, possible_error)
-        
 
+        self._render_info(info_hash_v1, form_values["id"], req, res, possible_error)
 
     @override
     def handle_get(self, req: RequestAttrs, res: ResponseFuncs) -> None:
@@ -64,9 +66,14 @@ class RegistryItemDetailHandler(PageHandlerAbs):
         info_hash = bytes.fromhex(info_hash_hex)
         self._render_info(info_hash, info_hash_hex, req, res, None)
 
-
-
-    def _render_info(self, info_hash: bytes, info_hash_hex: str, req: RequestAttrs, res: ResponseFuncs, edit_error_msg: str | None):
+    def _render_info(
+        self,
+        info_hash: bytes,
+        info_hash_hex: str,
+        req: RequestAttrs,
+        res: ResponseFuncs,
+        edit_error_msg: str | None,
+    ):
         registry_item = reg.get_by_info_hash(info_hash)
         peer_stats = get_peer_stats(info_hash)
         if peer_stats is None:
@@ -88,10 +95,10 @@ class RegistryItemDetailHandler(PageHandlerAbs):
             res.send_header("Content-Type", "text/html")
             res.end_headers()
 
-            view = "registry_item_detail.html.jinja" 
+            view = "registry_item_detail.html.jinja"
             if req.get_query_param("view") == "edit" or edit_error_msg is not None:
                 view = "registry_item_detail_edit.html.jinja"
-            
+
             res.wfile.write(
                 template_render.render(
                     view,
@@ -108,7 +115,7 @@ class RegistryItemDetailHandler(PageHandlerAbs):
                             "leecher_count": peer_stats.leechers,
                             "edit_url": f"/registry-item-detail?view=edit&info_hash={info_hash_hex}",
                         },
-                        "edit_error_msg": edit_error_msg
+                        "edit_error_msg": edit_error_msg,
                     },
                 )
             )

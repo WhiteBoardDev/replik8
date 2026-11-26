@@ -42,7 +42,11 @@ arg_parser.add_argument("--disable_https", default=False)
 arg_parser.add_argument("--server_port", default=8080)
 arg_parser.add_argument("--announce_url", required=True)
 arg_parser.add_argument("--website_base_url", required=True)
-arg_parser.add_argument("--server_id", required=True, help="Unique ID for this tracker server, will be stamped on every generated torrent")
+arg_parser.add_argument(
+    "--server_id",
+    required=True,
+    help="Unique ID for this tracker server, will be stamped on every generated torrent",
+)
 arg_parser.add_argument("--debug", default=False)
 arg_parser.add_argument("--https_public_chain", default="certs/public_chain.pem")
 arg_parser.add_argument("--https_private_key", default="certs/private_key.pem")
@@ -104,6 +108,7 @@ _unauthenticated_path_prefix = set(
 root_user_check()
 initialize_registry_navigation()
 initilize_peers()
+
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -197,6 +202,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
 
 server_address_bind = (args.bind_address, args.server_port)
 
+assert isinstance(server_address_bind[0], str) and len(server_address_bind[0]) > 0, (
+    "Bind address not properly set"
+)
+assert isinstance(server_address_bind[1], int) and server_address_bind[1] > 0, (
+    "Bind port not properly set"
+)
 with ThreadingHTTPServer(server_address_bind, SimpleHTTPRequestHandler) as httpd:
     if args.disable_https == False:
         _logger.info("Running with HTTPS")

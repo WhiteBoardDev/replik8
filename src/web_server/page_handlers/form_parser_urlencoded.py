@@ -11,7 +11,7 @@ type ValueType = str | int | bool
 
 
 def _to_value_type(raw_val: bytes) -> ValueType:
-    decoded_str = raw_val.decode().removesuffix('\r\n')
+    decoded_str = raw_val.decode().removesuffix("\r\n")
     if decoded_str.isdigit():
         return int(decoded_str)
     elif decoded_str.lower().strip() in ["false", "true"]:

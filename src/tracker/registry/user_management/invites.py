@@ -26,7 +26,6 @@ def _user_allowed_to_create_invite(user_id: str) -> None | InvalidUserInputError
         return InvalidUserInputError("Cannot create invite. Only Admins can")
 
 
-
 def _expire_stale_records():
     # TODO look at records past their redeem date and purge them
     return None
