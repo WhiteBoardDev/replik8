@@ -22,7 +22,7 @@ def _user_allowed_to_create_invite(user_id: str) -> None | InvalidUserInputError
     user = get_user_by_id(user_id)
     if user is None:
         return InvalidUserInputError("Input user not found! Cannot create invite")
-    if user.role != "ADMIN" or user.role != "ROOT":
+    if user.role != "ADMIN" and user.role != "ROOT":
         return InvalidUserInputError("Cannot create invite. Only Admins can")
 
 
